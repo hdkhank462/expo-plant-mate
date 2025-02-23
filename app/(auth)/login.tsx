@@ -1,14 +1,14 @@
-import { View } from "react-native";
-import React from "react";
-import { Text } from "~/components/ui/text";
 import { Link } from "expo-router";
+import React from "react";
+import { View } from "react-native";
+import { Text } from "~/components/ui/text";
 
 const LoginScreen = () => {
   return (
-    <View className="flex-1 center p-4 pt-10 bg-secondary/30">
+    <View className="flex-1 p-4 pt-10 center bg-secondary/30">
       <Text>LoginScreen</Text>
       <Link replace href={"/(auth)/register"}>
-        <Text className="underline font-bold">Đăng ký</Text>
+        <Text className="font-bold underline">Đăng ký</Text>
       </Link>
     </View>
   );

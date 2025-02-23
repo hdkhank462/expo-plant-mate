@@ -1,11 +1,11 @@
-import { View } from "react-native";
 import React from "react";
-import { Text } from "~/components/ui/text";
+import { View } from "react-native";
 import { ThemeToggle } from "~/components/ThemeToggle";
+import { Text } from "~/components/ui/text";
 
 const HomeScreen = () => {
   return (
-    <View className="flex-1 items-center p-4 justify-center bg-secondary/30">
+    <View className="items-center justify-center flex-1 p-4 bg-secondary/30">
       <View className="w-full h-full">
         <Text className="text-lg font-bold">Home</Text>
         <ThemeToggle />

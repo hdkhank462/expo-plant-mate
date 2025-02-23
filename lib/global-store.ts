@@ -10,13 +10,14 @@ import api from "~/lib/axios.config";
 import storage from "~/lib/storage";
 import { LoginSchema } from "~/schemas/auth.schema";
 import { STORAGE_KEYS } from "./constants";
+import { delay } from "./utils";
 
 type GlobalStore = {
   isInitialized: boolean;
   isAuthenticated: boolean;
   userInfo: UserInfo | null;
   authToken: AuthToken | null;
-  Initialize: () => Promise<void>;
+  Initialize: (delayMs?: number) => Promise<void>;
   login: (credentials: LoginSchema) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
@@ -32,7 +33,7 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
 
   //-------------------- Initialization functions --------------------
 
-  Initialize: async () => {
+  Initialize: async (delayMs?: number) => {
     GoogleSignin.configure();
 
     const authToken = await storage.get<AuthToken>(STORAGE_KEYS.AUTH_TOKEN);
@@ -75,6 +76,8 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
             }
       );
     }
+
+    await delay(delayMs ?? 1000);
 
     set((state) => ({
       isInitialized: true,

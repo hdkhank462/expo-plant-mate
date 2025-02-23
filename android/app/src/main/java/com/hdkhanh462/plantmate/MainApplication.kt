@@ -1,4 +1,4 @@
-package com.anonymous.plantmate
+package com.hdkhanh462.plantmate
 
 import android.app.Application
 import android.content.res.Configuration

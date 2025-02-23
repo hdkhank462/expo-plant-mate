@@ -3,11 +3,13 @@ import { View } from "react-native";
 
 export default function SplashScreen() {
   return (
-    <View className="flex-1 justify-center items-center bg-primary">
+    <View className="items-center justify-center flex-1 bg-background">
       <LottieView
-        source={require("~/assets/lottiefiles/splash.json")}
+        source={require("~/assets/lottiefiles/splash-animation.json")}
         style={{ width: "100%", height: "100%" }}
-        autoPlay
+        speed={1.5}
+        autoPlay={true}
+        loop={false}
       />
     </View>
   );

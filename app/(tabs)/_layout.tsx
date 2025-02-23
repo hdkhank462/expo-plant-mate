@@ -1,16 +1,15 @@
-import React from "react";
 import { Tabs } from "expo-router";
+import React from "react";
+import MenuButtonLink from "~/components/MenuButtonLink";
 import { Home } from "~/lib/icons/Home";
 import { User } from "~/lib/icons/User";
-import { ThemeToggle } from "~/components/ThemeToggle";
-import MenuButtonLink from "~/components/MenuButtonLink";
 
 const TabsLayout = () => {
   return (
     <Tabs
       screenOptions={{
-        headerStyle:{
-          height: 70
+        headerStyle: {
+          height: 70,
         },
         animation: "fade",
         headerTitleAlign: "center",

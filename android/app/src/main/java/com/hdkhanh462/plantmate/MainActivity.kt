@@ -1,4 +1,4 @@
-package com.anonymous.plantmate
+package com.hdkhanh462.plantmate
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

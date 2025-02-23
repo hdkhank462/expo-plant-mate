@@ -6,17 +6,16 @@ import {
   Theme,
   ThemeProvider,
 } from "@react-navigation/native";
+import { PortalHost } from "@rn-primitives/portal";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import * as React from "react";
+import React from "react";
 import { Platform } from "react-native";
-import { NAV_THEME } from "~/lib/constants";
-import { useColorScheme } from "~/lib/useColorScheme";
-import { PortalHost } from "@rn-primitives/portal";
-import { ThemeToggle } from "~/components/ThemeToggle";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
+import { NAV_THEME } from "~/lib/constants";
 import { useGlobalStore } from "~/lib/global-store";
-import { Header } from "@react-navigation/elements";
+import { useColorScheme } from "~/lib/useColorScheme";
+import SplashScreen from "~/app/splash";
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -49,10 +48,11 @@ export default function RootLayout() {
       // Adds the background color to the html element to prevent white background on overscroll.
       document.documentElement.classList.add("bg-background");
     }
+
     setAndroidNavigationBar(colorScheme);
     setIsColorSchemeLoaded(true);
 
-    Initialize();
+    Initialize(2310);
 
     hasMounted.current = true;
   }, []);
@@ -64,21 +64,23 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
       <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
+
+      {/* {!isInitialized ? (
+        <SplashScreen />
+      ) : (
+      )} */}
+
       <Stack
         screenOptions={{
           animation: "fade_from_bottom",
         }}
       >
-        {!isInitialized ? (
-          <Stack.Screen name="splash" options={{ headerShown: false }} />
-        ) : (
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        )}
-
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="menu" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" options={{ headerShown: false }} />
       </Stack>
+
       <PortalHost />
     </ThemeProvider>
   );
