@@ -5,9 +5,10 @@ type AppError = {
   message: string;
 };
 
-type ApiResponse<T> = {
+type ApiResponse<TError, TData = any> = {
   isSuccess: boolean;
-  error?: T;
+  data?: TData;
+  error?: TError;
 };
 
 type ApiError = {

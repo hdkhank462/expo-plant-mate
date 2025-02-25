@@ -1,6 +1,7 @@
 import { Link, useNavigation } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import { Image, View } from "react-native";
+import auth from "~/api/auth";
 import FormField from "~/components/FormField";
 import GoogleLoginButton from "~/components/GoogleLoginButton";
 import LoadingOverlay from "~/components/LoadingOverlay";
@@ -13,10 +14,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "~/components/ui/dialog";
 import { Text } from "~/components/ui/text";
-import { useGlobalStore } from "~/lib/global-store";
 import { loginSchema, LoginSchema } from "~/schemas/auth.schema";
 
 const DEFAULT_LOGIN_FORM: LoginSchema = {
@@ -25,25 +24,28 @@ const DEFAULT_LOGIN_FORM: LoginSchema = {
 };
 
 const LoginScreen = () => {
-  const loginWithGoogle = useGlobalStore((state) => state.loginWithGoogle);
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = React.useState(false);
   const [isErrorDialogOpen, setIsErrorDialogOpen] = React.useState(false);
   const [form, setForm] = React.useState<LoginSchema>(DEFAULT_LOGIN_FORM);
   const [errors, setErrors] = React.useState<LoginError>();
 
+  useEffect(() => {
+    if (errors?.password) {
+      setForm((prev) => ({ ...prev, password: "" }));
+    }
+  }, [errors]);
+
   const handleGoogleLogin = async () => {
     setIsLoading(true);
-    const response = await loginWithGoogle();
-    setIsLoading(false);
-
-    if (!response.isSuccess) {
+    const response = await auth.loginWithGoogle();
+    if (response.isSuccess) {
+      navigation.goBack();
+    } else {
       setErrors(response.error);
-      setIsErrorDialogOpen(true);
-      return;
+      if (response.error?.non_field_errors) setIsErrorDialogOpen(true);
     }
-    navigation.goBack();
-    console.log("Logged in with Google!");
+    setIsLoading(false);
   };
 
   return (
@@ -114,7 +116,6 @@ interface FormViewProps {
 }
 
 const FormView = (props: FormViewProps) => {
-  const login = useGlobalStore((state) => state.login);
   const navigation = useNavigation();
 
   const validateForm = (form: LoginSchema): boolean => {
@@ -157,16 +158,14 @@ const FormView = (props: FormViewProps) => {
     if (!isValid) return;
 
     props.setIsLoading(true);
-    const response = await login(props.form);
-    props.setIsLoading(false);
-
-    if (!response.isSuccess) {
+    const response = await auth.loginWithCreds(props.form);
+    if (response.isSuccess) {
+      navigation.goBack();
+    } else {
       props.setErrors(response.error);
-      props.setIsErrorDialogOpen(true);
-      return;
+      if (response.error?.non_field_errors) props.setIsErrorDialogOpen(true);
     }
-    navigation.goBack();
-    console.log("Logged in!");
+    props.setIsLoading(false);
   };
 
   return (

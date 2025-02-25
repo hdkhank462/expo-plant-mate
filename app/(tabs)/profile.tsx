@@ -1,6 +1,9 @@
 import { Link } from "expo-router";
 import React from "react";
 import { SafeAreaView, ScrollView, View } from "react-native";
+import Toast from "react-native-toast-message";
+import auth from "~/api/auth";
+import Refresher from "~/components/Refresher";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
@@ -12,74 +15,109 @@ import { LogOut } from "~/lib/icons/LogOut";
 
 const ProfileScreen = () => {
   const userInfo = useGlobalStore((state) => state.userInfo);
+  const scrollRef = React.useRef<ScrollView>(null);
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+
+    const response = await auth.getUserInfo();
+    if (!response.isSuccess && response.error?.non_field_errors) {
+      Toast.show({
+        type: "error",
+        text1: "Thông báo",
+        text2: response.error?.non_field_errors,
+      });
+    }
+
+    setRefreshing(false);
+  }, []);
 
   return (
-    <View className="flex-1 p-4 bg-secondary/30">
-      {userInfo ? <ProfileView userInfo={userInfo} /> : <UnauthenticatedView />}
-    </View>
+    <SafeAreaView>
+      <ScrollView
+        ref={scrollRef}
+        contentContainerClassName="p-4 bg-secondary/30 min-h-full"
+        showsVerticalScrollIndicator={false}
+        automaticallyAdjustContentInsets={false}
+        contentInset={{ top: 12 }}
+        refreshControl={
+          <Refresher
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            className="bg-secondary text-primary"
+          />
+        }
+      >
+        <View className="">
+          {userInfo ? (
+            <ProfileView userInfo={userInfo} />
+          ) : (
+            <UnauthenticatedView />
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const ProfileView = ({ userInfo }: { userInfo: UserInfo }) => {
-  const logout = useGlobalStore((state) => state.logout);
-
   return (
-    <SafeAreaView className="h-full">
-      <ScrollView>
-        <View className="gap-4">
-          <View className="items-center gap-2">
-            <Avatar alt="Avatar" className="w-24 h-24">
-              <AvatarImage
-                source={{
-                  uri: userInfo.avatar_url ?? userInfo.social_avatar_url,
-                }}
-              />
-              <AvatarFallback>
-                <Text className="text-lg">N/A</Text>
-              </AvatarFallback>
-            </Avatar>
+    <View className="gap-4">
+      <View className="items-center gap-2">
+        <Avatar alt="Avatar" className="w-24 h-24">
+          <AvatarImage
+            source={{
+              uri: userInfo.avatar_url ?? userInfo.social_avatar_url,
+            }}
+          />
+          <AvatarFallback>
+            <Text className="text-lg">N/A</Text>
+          </AvatarFallback>
+        </Avatar>
 
-            <View className="items-center">
-              <Text className="text-lg font-bold">{userInfo.full_name}</Text>
-              <Text className="text-sm text-muted-foreground">
-                {userInfo.email}
-              </Text>
-            </View>
-          </View>
-          <ProfileContentCard title="Ngày tham gia">
-            <View className="flex-row items-center gap-2">
-              <CalendarClock
-                className="text-card-foreground"
-                size={16}
-                strokeWidth={2}
-              />
-              <Text className="text-lg">
-                {new Date(userInfo.date_joined).toLocaleString("vi-VN", {
-                  timeStyle: "short",
-                  dateStyle: "medium",
-                })}
-              </Text>
-            </View>
-          </ProfileContentCard>
-
-          <Button
-            variant={"outline"}
-            onPress={logout}
-            className="items-start shadow-sm shadow-foreground/5"
-          >
-            <View className="flex-row items-center gap-2">
-              <LogOut className="text-destructive" size={16} strokeWidth={2} />
-              <Text className="font-bold text-destructive group-active:text-destructive">
-                Đăng xuất
-              </Text>
-            </View>
-          </Button>
-          <Link href={"/form"}>
-            <Text>Form Test</Text>
-          </Link>
+        <View className="items-center">
+          <Text className="text-lg font-bold">{userInfo.full_name}</Text>
+          <Text className="text-sm text-muted-foreground">
+            {userInfo.email}
+          </Text>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+      <ProfileContentCard title="Ngày tham gia">
+        <View className="flex-row items-center gap-2">
+          <CalendarClock
+            className="text-card-foreground"
+            size={16}
+            strokeWidth={2}
+          />
+          <Text className="text-lg">
+            {new Date(userInfo.date_joined).toLocaleString("vi-VN", {
+              timeStyle: "short",
+              dateStyle: "medium",
+            })}
+          </Text>
+        </View>
+      </ProfileContentCard>
+
+      <Button
+        variant={"outline"}
+        onPress={auth.logout}
+        className="items-start shadow-sm shadow-foreground/5"
+      >
+        <View className="flex-row items-center gap-2">
+          <LogOut className="text-destructive" size={16} strokeWidth={2} />
+          <Text className="font-bold text-destructive group-active:text-destructive">
+            Đăng xuất
+          </Text>
+        </View>
+      </Button>
+      <Link href={"/form"}>
+        <Text>Form Test</Text>
+      </Link>
+      <Link href={"/toast"}>
+        <Text>Toast Test</Text>
+      </Link>
+    </View>
   );
 };
 

@@ -16,6 +16,7 @@ import { NAV_THEME } from "~/lib/constants";
 import { useGlobalStore } from "~/lib/global-store";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { delay } from "~/lib/utils";
+import { ToastProvider } from "~/components/ui/toast";
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -81,9 +82,11 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="menu" options={{ headerShown: false }} />
         <Stack.Screen name="form" options={{ headerShown: false }} />
+        <Stack.Screen name="toast" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" options={{ headerShown: false }} />
       </Stack>
 
+      <ToastProvider />
       <PortalHost />
     </ThemeProvider>
   );
