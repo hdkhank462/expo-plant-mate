@@ -4,7 +4,7 @@ import {
   isSuccessResponse,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
-import { AxiosResponse } from "axios";
+import axios, { AxiosError, AxiosResponse, isAxiosError } from "axios";
 import { create } from "zustand";
 import api from "~/lib/axios.config";
 import storage from "~/lib/storage";
@@ -17,9 +17,9 @@ type GlobalStore = {
   isAuthenticated: boolean;
   userInfo: UserInfo | null;
   authToken: AuthToken | null;
-  Initialize: (delayMs?: number) => Promise<void>;
-  login: (credentials: LoginSchema) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
+  initializeGlobalStore: (delayMs?: number) => Promise<void>;
+  login: (credentials: LoginSchema) => Promise<ApiResponse<LoginError>>;
+  loginWithGoogle: () => Promise<ApiResponse<LoginError>>;
   logout: () => Promise<void>;
 };
 
@@ -33,7 +33,8 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
 
   //-------------------- Initialization functions --------------------
 
-  Initialize: async (delayMs?: number) => {
+  initializeGlobalStore: async (delayMs?: number) => {
+    console.log("Initializing global store");
     GoogleSignin.configure();
 
     const authToken = await storage.get<AuthToken>(STORAGE_KEYS.AUTH_TOKEN);
@@ -77,7 +78,7 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
       );
     }
 
-    await delay(delayMs ?? 1000);
+    if (delayMs) await delay(delayMs);
 
     set((state) => ({
       isInitialized: true,
@@ -86,7 +87,11 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
 
   //-------------------- Authentication functions --------------------
 
-  login: async (credentials: LoginSchema) => {
+  login: async (credentials: LoginSchema): Promise<ApiResponse<LoginError>> => {
+    console.log("Logining with credentials:", credentials);
+    let isSuccess = false;
+    let error: LoginError | undefined;
+
     try {
       const response = await api.post<any, AxiosResponse<LoginResponse>>(
         "/auth/login/",
@@ -96,21 +101,38 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
       );
 
       await handleLoginResponse(set, response);
-    } catch (error) {
-      console.error("Error during login:", error);
+      isSuccess = true;
+    } catch (e: unknown) {
+      console.log("Error during login with credentials:", e);
+
+      if (axios.isAxiosError(e)) {
+        switch (e.code) {
+          case AxiosError.ERR_BAD_REQUEST:
+            error = {
+              non_field_errors:
+                "Email hoặc mật khẩu không chính xác.\nVui lòng thử lại.",
+            };
+            break;
+          default:
+            break;
+        }
+      }
+    } finally {
+      console.log({ isSuccess, error });
+      return { isSuccess, error };
     }
   },
-  loginWithGoogle: async () => {
+  loginWithGoogle: async (): Promise<ApiResponse<LoginError>> => {
+    console.log("Logining with Google");
+    let isSuccess = false;
+    let error: LoginError | undefined;
+
     try {
       await GoogleSignin.hasPlayServices();
 
       const signInResponse = await GoogleSignin.signIn();
       if (isSuccessResponse(signInResponse)) {
-        // console.log(JSON.stringify(signInResponse, null, 2));
-
-        // get the user's idToken, accessToken and serverAuthCode
         const getTokensResponse = await GoogleSignin.getTokens();
-        // console.log(JSON.stringify(getTokensResponse, null, 2));
 
         // call backend api to authenticate user
         const response = await api.post<any, AxiosResponse<LoginResponse>>(
@@ -121,33 +143,29 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
         );
 
         await handleLoginResponse(set, response);
-      } else {
-        // sign in was cancelled by user
-      }
-    } catch (error) {
-      if (isErrorWithCode(error)) {
-        switch (error.code) {
+        isSuccess = true;
+      } else console.log("User cancelled the login flow");
+    } catch (e: unknown) {
+      console.log("Error during login with Google:", e);
+
+      if (isErrorWithCode(e)) {
+        switch (e.code) {
           case statusCodes.IN_PROGRESS:
-            // operation (eg. sign in) already in progress
-            console.log("Operation (eg. sign in) already in progress", error);
             break;
           case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
-            // Android only, play services not available or outdated
-            console.log(
-              "Android only, play services not available or outdated",
-              error
-            );
             break;
           default:
-            // some other error happened
-            console.log("some other error happened", error);
+            break;
         }
-      } else {
-        // an error that's not related to google sign in occurred
       }
+    } finally {
+      console.log({ isSuccess, error });
+      return { isSuccess, error };
     }
   },
   logout: async () => {
+    console.log("Logging out");
+
     try {
       set((state) => ({
         userInfo: null,
@@ -176,7 +194,7 @@ const handleLoginResponse = async (
     replace?: boolean | undefined
   ) => void,
   response: AxiosResponse<LoginResponse>
-) => {
+): Promise<void> => {
   if (response.status !== 200) {
     console.log("Login failed:", response);
     throw new Error("Login failed");

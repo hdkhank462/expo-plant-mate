@@ -21,7 +21,7 @@ export function useColorScheme() {
       );
 
       if (storedColorScheme) {
-        console.log("Setting color scheme to", storedColorScheme);
+        console.log("Loading color scheme to", storedColorScheme);
         setColorScheme(storedColorScheme);
       }
     };

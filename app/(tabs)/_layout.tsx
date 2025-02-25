@@ -3,13 +3,20 @@ import React from "react";
 import MenuButtonLink from "~/components/MenuButtonLink";
 import { Home } from "~/lib/icons/Home";
 import { User } from "~/lib/icons/User";
+import { Leaf } from "~/lib/icons/Leaf";
+import TabsContainer from "~/components/TabsContainer";
 
 const TabsLayout = () => {
   return (
-    <Tabs
+    <TabsContainer
+      tabBarActiveClassName="bg-background text-primary"
+      tabBarInactiveClassName="bg-background text-primary/50"
       screenOptions={{
         headerStyle: {
           height: 70,
+        },
+        tabBarLabelStyle: {
+          fontWeight: "bold",
         },
         animation: "fade",
         headerTitleAlign: "center",
@@ -20,8 +27,25 @@ const TabsLayout = () => {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => (
-            <Home size={24} strokeWidth={1.25} color={color} />
+          tabBarIcon: ({ focused, color, size }) => (
+            <Home
+              size={size}
+              strokeWidth={focused ? 1.75 : 1.25}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="plant-list"
+        options={{
+          title: "Plant list",
+          tabBarIcon: ({ focused, color, size }) => (
+            <Leaf
+              size={size}
+              strokeWidth={focused ? 1.75 : 1.25}
+              color={color}
+            />
           ),
         }}
       />
@@ -29,12 +53,16 @@ const TabsLayout = () => {
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) => (
-            <User size={24} strokeWidth={1.25} color={color} />
+          tabBarIcon: ({ focused, color, size }) => (
+            <User
+              size={size}
+              strokeWidth={focused ? 1.75 : 1.25}
+              color={color}
+            />
           ),
         }}
       />
-    </Tabs>
+    </TabsContainer>
   );
 };
 

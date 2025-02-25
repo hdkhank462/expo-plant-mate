@@ -10,11 +10,12 @@ import { PortalHost } from "@rn-primitives/portal";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { Platform } from "react-native";
+import { Platform, View } from "react-native";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { NAV_THEME } from "~/lib/constants";
 import { useGlobalStore } from "~/lib/global-store";
 import { useColorScheme } from "~/lib/useColorScheme";
+import { FullWindowOverlay } from "react-native-screens";
 import SplashScreen from "~/app/splash";
 
 const LIGHT_THEME: Theme = {
@@ -32,43 +33,36 @@ export {
 } from "expo-router";
 
 export default function RootLayout() {
-  const hasMounted = React.useRef(false);
   const { colorScheme, isDarkColorScheme } = useColorScheme();
-  const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
-  const Initialize = useGlobalStore((state) => state.Initialize);
+  const initializeGlobalStore = useGlobalStore(
+    (state) => state.initializeGlobalStore
+  );
   const isInitialized = useGlobalStore((state) => state.isInitialized);
 
   useIsomorphicLayoutEffect(() => {
-    console.log("Rerender!");
-    if (hasMounted.current) {
-      return;
-    }
+    const initializeRootLayout = async () => {
+      console.log("Rerender!");
 
-    if (Platform.OS === "web") {
-      // Adds the background color to the html element to prevent white background on overscroll.
-      document.documentElement.classList.add("bg-background");
-    }
+      if (isInitialized) return;
 
-    setAndroidNavigationBar(colorScheme);
-    setIsColorSchemeLoaded(true);
+      if (Platform.OS === "web") {
+        // Adds the background color to the html element to prevent white background on overscroll.
+        document.documentElement.classList.add("bg-background");
+      }
 
-    Initialize(2310);
+      setAndroidNavigationBar(colorScheme);
+      await initializeGlobalStore(2310);
+      console.log("Finished initializing!");
+    };
 
-    hasMounted.current = true;
+    initializeRootLayout();
   }, []);
 
-  if (!isColorSchemeLoaded) {
-    return null;
-  }
+  if (!isInitialized) return <SplashScreen />;
 
   return (
     <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
       <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
-
-      {/* {!isInitialized ? (
-        <SplashScreen />
-      ) : (
-      )} */}
 
       <Stack
         screenOptions={{
