@@ -9,7 +9,7 @@ import { create } from "zustand";
 import api from "~/lib/axios.config";
 import storage from "~/lib/storage";
 import { LoginSchema } from "~/schemas/auth.schema";
-import { STORAGE_KEYS } from "./constants";
+import { DEFAULT, STORAGE_KEYS } from "./constants";
 import { delay } from "./utils";
 
 type GlobalStore = {
@@ -17,7 +17,7 @@ type GlobalStore = {
   isAuthenticated: boolean;
   userInfo: UserInfo | null;
   authToken: AuthToken | null;
-  initializeGlobalStore: (delayMs?: number) => Promise<void>;
+  initializeGlobalStore: () => Promise<void>;
   login: (credentials: LoginSchema) => Promise<ApiResponse<LoginError>>;
   loginWithGoogle: () => Promise<ApiResponse<LoginError>>;
   logout: () => Promise<void>;
@@ -33,39 +33,36 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
 
   //-------------------- Initialization functions --------------------
 
-  initializeGlobalStore: async (delayMs?: number) => {
+  initializeGlobalStore: async () => {
     console.log("Initializing global store");
     GoogleSignin.configure();
 
-    const authToken = await storage.get<AuthToken>(STORAGE_KEYS.AUTH_TOKEN);
-    if (authToken) {
-      try {
-        const response = await api.get<any, AxiosResponse<UserInfo>>(
-          "/auth/user/",
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${authToken.access}`,
-            },
-          }
-        );
+    // const authToken = await storage.get<AuthToken>(STORAGE_KEYS.AUTH_TOKEN);
+    // if (authToken) {
+    //   try {
+    //     const response = await api.get<any, AxiosResponse<UserInfo>>(
+    //       "/auth/user/",
+    //       {
+    //         timeout,
+    //         headers: {
+    //           "Content-Type": "application/json",
+    //           Authorization: `Bearer ${authToken.access}`,
+    //         },
+    //       }
+    //     );
 
-        if (response.status !== 200) {
-          console.log("Get user info failed:", response);
-          throw new Error("Get user info failed");
-        }
-
-        set((state) => ({
-          userInfo: response.data,
-          authToken,
-          isAuthenticated: true,
-        }));
-      } catch (error) {
-        console.error("Error during get user info:", error);
-      }
-    }
+    //     set((state) => ({
+    //       userInfo: response.data,
+    //       authToken,
+    //       isAuthenticated: true,
+    //     }));
+    //   } catch (error) {
+    //     console.error("Error during get user info:", error);
+    //   }
+    // }
 
     // If not connected to the internet
+
     const userInfo = await storage.get<UserInfo>(STORAGE_KEYS.USER_INFO);
     if (userInfo) {
       set((state) =>
@@ -77,8 +74,6 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
             }
       );
     }
-
-    if (delayMs) await delay(delayMs);
 
     set((state) => ({
       isInitialized: true,

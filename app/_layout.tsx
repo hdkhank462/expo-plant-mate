@@ -9,14 +9,13 @@ import {
 import { PortalHost } from "@rn-primitives/portal";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React from "react";
-import { Platform, View } from "react-native";
-import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
+import React, { useState } from "react";
+import { Platform } from "react-native";
+import SplashScreen from "~/app/splash";
 import { NAV_THEME } from "~/lib/constants";
 import { useGlobalStore } from "~/lib/global-store";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { FullWindowOverlay } from "react-native-screens";
-import SplashScreen from "~/app/splash";
+import { delay } from "~/lib/utils";
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -38,27 +37,36 @@ export default function RootLayout() {
     (state) => state.initializeGlobalStore
   );
   const isInitialized = useGlobalStore((state) => state.isInitialized);
+  const [isAppReady, setisAppReady] = useState(false);
 
   useIsomorphicLayoutEffect(() => {
     const initializeRootLayout = async () => {
-      console.log("Rerender!");
+      console.log("Preparing app...");
 
-      if (isInitialized) return;
+      if (isAppReady) return;
 
       if (Platform.OS === "web") {
         // Adds the background color to the html element to prevent white background on overscroll.
         document.documentElement.classList.add("bg-background");
       }
 
-      setAndroidNavigationBar(colorScheme);
-      await initializeGlobalStore(2310);
-      console.log("Finished initializing!");
+      // Set the Android navigation bar color.
+      // setAndroidNavigationBar(colorScheme);
+
+      // Initialize the global store.
+      if (!isInitialized) await initializeGlobalStore();
+
+      // Wait for the splash screen to finish.
+      await delay(2310);
+
+      setisAppReady(true);
+      console.log("App is ready!");
     };
 
     initializeRootLayout();
   }, []);
 
-  if (!isInitialized) return <SplashScreen />;
+  if (!isAppReady) return <SplashScreen />;
 
   return (
     <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
@@ -72,6 +80,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="menu" options={{ headerShown: false }} />
+        <Stack.Screen name="form" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" options={{ headerShown: false }} />
       </Stack>
 

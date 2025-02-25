@@ -17,6 +17,10 @@ export const NAV_THEME = {
   },
 };
 
+export const DEFAULT: { APP_THEME: AppTheme } = {
+  APP_THEME: "light",
+};
+
 export const STORAGE_KEYS = {
   AUTH_TOKEN: "authToken",
   USER_INFO: "userInfo",

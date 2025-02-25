@@ -1,10 +1,8 @@
 import { useColorScheme as useNativewindColorScheme } from "nativewind";
 import { useEffect } from "react";
-import { STORAGE_KEYS } from "~/lib/constants";
+import { DEFAULT, STORAGE_KEYS } from "~/lib/constants";
 import { useGlobalStore } from "~/lib/global-store";
 import storage from "~/lib/storage";
-
-type ColorScheme = "light" | "dark" | "system";
 
 export function useColorScheme() {
   const { colorScheme, setColorScheme, toggleColorScheme } =
@@ -16,13 +14,13 @@ export function useColorScheme() {
     const loadColorScheme = async () => {
       if (isInitialized) return;
 
-      const storedColorScheme = await storage.get<ColorScheme>(
+      const storedTheme = await storage.get<AppTheme>(
         STORAGE_KEYS.COLOR_SCHEME
       );
 
-      if (storedColorScheme) {
-        console.log("Loading color scheme to", storedColorScheme);
-        setColorScheme(storedColorScheme);
+      if (storedTheme) {
+        console.log("Loading color scheme to", storedTheme);
+        setColorScheme(storedTheme);
       }
     };
 
@@ -33,7 +31,7 @@ export function useColorScheme() {
   useEffect(() => {
     const saveColorScheme = async () => {
       if (isInitialized && colorScheme) {
-        const storedColorScheme = await storage.get<ColorScheme>(
+        const storedColorScheme = await storage.get<AppTheme>(
           STORAGE_KEYS.COLOR_SCHEME
         );
 
@@ -48,7 +46,7 @@ export function useColorScheme() {
   }, [colorScheme]);
 
   return {
-    colorScheme: colorScheme ?? "light",
+    colorScheme: colorScheme ?? DEFAULT.APP_THEME,
     isDarkColorScheme: colorScheme === "dark",
     setColorScheme,
     toggleColorScheme,

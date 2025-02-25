@@ -1,3 +1,4 @@
+import { Link } from "expo-router";
 import React from "react";
 import { SafeAreaView, ScrollView, View } from "react-native";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
@@ -73,6 +74,9 @@ const ProfileView = ({ userInfo }: { userInfo: UserInfo }) => {
               </Text>
             </View>
           </Button>
+          <Link href={"/form"}>
+            <Text>Form Test</Text>
+          </Link>
         </View>
       </ScrollView>
     </SafeAreaView>
