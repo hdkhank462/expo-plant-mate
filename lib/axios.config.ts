@@ -1,5 +1,11 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, {
+  AxiosError,
+  AxiosRequestConfig,
+  AxiosResponse,
+  isAxiosError,
+} from "axios";
 import { DEFAULT, STORAGE_KEYS } from "~/lib/constants";
+import { AppErrors } from "~/lib/errors";
 import storage from "~/lib/storage";
 
 const DEFAULT_HEADERS = {
@@ -37,20 +43,45 @@ interface Request {
   config?: AxiosRequestConfig<any>;
 }
 
+export class ApiErrors extends AppErrors {
+  name = "ApiErrors";
+
+  constructor(error?: AppError) {
+    super(error);
+  }
+
+  static NetworkError: AppError = {
+    code: "NETWORK_ERROR",
+    message:
+      "Không thể kết nối đến máy chủ.\nVui lòng kiểm tra kết nối mạng và thử lại.",
+  };
+  static networkError() {
+    return new ApiErrors(this.NetworkError);
+  }
+}
+
 const request = async <TResponse, TInput = any>({
   url,
   methord,
   data,
   config,
 }: Request) => {
+  console.log("Request:", JSON.stringify({ url, methord, data, config }));
   try {
-    return instance[methord]<TInput, AxiosResponse<TResponse>>(
+    const response = await instance[methord]<TInput, AxiosResponse<TResponse>>(
       url,
       data,
       config
     );
+    console.log("Response:", response.data);
+    return response;
   } catch (error) {
-    return Promise.reject(error);
+    if (isAxiosError(error)) {
+      if (error.code === AxiosError.ERR_NETWORK) {
+        throw ApiErrors.networkError();
+      }
+    }
+    throw error;
   }
 };
 

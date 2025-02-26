@@ -1,88 +1,121 @@
-import {
-  GoogleSignin,
-  isSuccessResponse,
-} from "@react-native-google-signin/google-signin";
-import { AxiosError, isAxiosError } from "axios";
-import api from "~/lib/axios.config";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import api, { ApiErrors } from "~/lib/axios.config";
 import { STORAGE_KEYS } from "~/lib/constants";
+import { AppErrors } from "~/lib/errors";
 import { useGlobalStore } from "~/lib/global-store";
 import storage from "~/lib/storage";
 import { LoginSchema } from "~/schemas/auth.schema";
 
-const loginWithCreds = async (schema: LoginSchema) => {
-  let response: ApiResponse<LoginError, UserInfo> = {
-    isSuccess: false,
+export class AuthErrors<T> extends AppErrors {
+  name = "AuthErrors";
+  properties?: { [key in keyof T]?: string };
+
+  constructor(error?: AppError, properties?: { [key in keyof T]?: string }) {
+    super(error);
+    this.properties = properties;
+  }
+
+  static InvalidCredentials: AppError = {
+    code: "INVALID_CREDENTIALS",
+    message: "Email hoặc mật khẩu không chính xác",
+  };
+  static Unauthorized = {
+    code: "UNAUTHORIZED",
+    message: "Unauthorized",
   };
 
-  try {
-    const apiResponse = await api.post<LoginResponse>("/auth/login", {
-      ...schema,
+  static invalidCredentials() {
+    return new AuthErrors<LoginSchema>(this.InvalidCredentials, {
+      password: this.InvalidCredentials.message,
     });
-    useGlobalStore.setState({ userInfo: apiResponse.data.user });
-    storage.set(STORAGE_KEYS.USER_INFO, apiResponse);
-    response.isSuccess = true;
-    response.data = apiResponse.data.user;
-  } catch (error) {
-    if (isAxiosError(error)) {
-      response.error = { ...handleError(error) };
-    }
-  } finally {
-    console.log(
-      "Login with cridentials response:",
-      JSON.stringify(response, null, 2)
-    );
-    return response;
   }
+
+  static async unauthorized() {
+    useGlobalStore.setState({
+      isAuthenticated: false,
+      authToken: null,
+      userInfo: null,
+    });
+
+    // Remove from storage
+    await storage.remove(STORAGE_KEYS.AUTH_TOKEN);
+    await storage.remove(STORAGE_KEYS.USER_INFO);
+    return new AuthErrors(this.Unauthorized);
+  }
+}
+
+const loginWithCreds = async (schema: LoginSchema) => {
+  console.log("Logging in with credentials");
+
+  const response = await api.post<LoginResponse>("/auth/login/", schema);
+
+  if (response.status === 400) throw AuthErrors.invalidCredentials();
+
+  const authToken: AuthToken = {
+    access: response.data.access,
+    refresh: response.data.refresh,
+  };
+
+  useGlobalStore.setState({
+    isAuthenticated: true,
+    userInfo: response.data.user,
+    authToken,
+  });
+
+  // Save to storage
+  await storage.set(STORAGE_KEYS.AUTH_TOKEN, authToken);
+  await storage.set(STORAGE_KEYS.USER_INFO, response.data.user);
+
+  return response.data;
+};
+
+const getGoogleTokens = async () => {
+  await GoogleSignin.signIn();
+  const access_token = (await GoogleSignin.getTokens()).accessToken;
+  return access_token;
 };
 
 const loginWithGoogle = async () => {
-  let response: ApiResponse<ApiError, UserInfo> = {
-    isSuccess: false,
+  console.log("Logging in with Google");
+
+  const access_token = await getGoogleTokens();
+  const response = await api.post<LoginResponse>("/auth/google/", {
+    access_token,
+  });
+
+  if (response.status === 400) throw AuthErrors.invalidCredentials();
+  if (response.status === 401) throw AuthErrors.unauthorized();
+
+  const authToken: AuthToken = {
+    access: response.data.access,
+    refresh: response.data.refresh,
   };
 
-  try {
-    const signInResponse = await GoogleSignin.signIn();
-    if (!isSuccessResponse(signInResponse)) return response;
+  useGlobalStore.setState({
+    isAuthenticated: true,
+    userInfo: response.data.user,
+    authToken,
+  });
 
-    const access_token = (await GoogleSignin.getTokens()).accessToken;
-    const apiResponse = await api.post<LoginResponse>("/auth/google/", {
-      access_token,
-    });
-    useGlobalStore.setState({ userInfo: apiResponse.data.user });
-    storage.set(STORAGE_KEYS.USER_INFO, apiResponse);
-    response.isSuccess = true;
-    response.data = apiResponse.data.user;
-  } catch (error) {
-    if (isAxiosError(error)) {
-      response.error = { ...handleError(error) };
-    }
-  } finally {
-    console.log(
-      "Login with Google response:",
-      JSON.stringify(response, null, 2)
-    );
-    return response;
-  }
+  // Save to storage
+  await storage.set(STORAGE_KEYS.AUTH_TOKEN, authToken);
+  await storage.set(STORAGE_KEYS.USER_INFO, response.data.user);
+  return response.data;
 };
 
 const getUserInfo = async () => {
-  let response: ApiResponse<ApiError, UserInfo> = {
-    isSuccess: false,
-  };
+  console.log("Getting user info");
 
-  try {
-    const headers = await api.getHeaders({ withToken: true });
-    const apiResponse = await api.get<UserInfo>("/auth/user", { headers });
-    response.data = apiResponse.data;
-    response.isSuccess = true;
-  } catch (error) {
-    if (isAxiosError(error)) {
-      response.error = { ...handleError(error) };
-    }
-  } finally {
-    console.log("Get user info response:", JSON.stringify(response, null, 2));
-    return response;
-  }
+  const headers = await api.getHeaders({ withToken: true });
+  const response = await api.get<UserInfo>("/auth/user", { headers });
+
+  if (response.status === 400) throw AuthErrors.invalidCredentials();
+  if (response.status === 401) throw AuthErrors.unauthorized();
+
+  useGlobalStore.setState({ userInfo: response.data });
+
+  await storage.set(STORAGE_KEYS.USER_INFO, response.data);
+  return response.data;
 };
 
 const logout = async () => {
@@ -106,34 +139,4 @@ const logout = async () => {
   }
 };
 
-const handleError = (error: AxiosError) => {
-  if (error.code === AxiosError.ERR_NETWORK) {
-    return {
-      non_field_errors:
-        "Không thể kết nối đến máy chủ.\nVui lòng kiểm tra kết nối mạng và thử lại.",
-    };
-  }
-
-  if (error.response) {
-    if (error.response.status === 400) {
-      return { password: "Email hoặc mật khẩu không chính xác" };
-    }
-    if (error.response.status === 401) {
-      storage.remove(STORAGE_KEYS.AUTH_TOKEN);
-      storage.remove(STORAGE_KEYS.USER_INFO);
-      useGlobalStore.setState({
-        isAuthenticated: false,
-        authToken: null,
-        userInfo: null,
-      });
-      return null;
-    }
-  }
-};
-
-export default {
-  loginWithCreds,
-  loginWithGoogle,
-  logout,
-  getUserInfo,
-};
+export { getUserInfo, loginWithCreds, loginWithGoogle, logout };

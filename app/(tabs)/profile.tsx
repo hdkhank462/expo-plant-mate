@@ -2,16 +2,18 @@ import { Link } from "expo-router";
 import React from "react";
 import { SafeAreaView, ScrollView, View } from "react-native";
 import Toast from "react-native-toast-message";
-import auth from "~/api/auth";
+import { AuthErrors, getUserInfo, logout } from "~/api/auth";
 import Refresher from "~/components/Refresher";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import { Text } from "~/components/ui/text";
 import UnauthenticatedView from "~/components/UnauthenticatedView";
+import { ApiErrors } from "~/lib/axios.config";
 import { useGlobalStore } from "~/lib/global-store";
 import { CalendarClock } from "~/lib/icons/CalendarClock";
 import { LogOut } from "~/lib/icons/LogOut";
+import { catchErrorTyped } from "~/lib/utils";
 
 const ProfileScreen = () => {
   const userInfo = useGlobalStore((state) => state.userInfo);
@@ -21,12 +23,15 @@ const ProfileScreen = () => {
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
 
-    const response = await auth.getUserInfo();
-    if (!response.isSuccess && response.error?.non_field_errors) {
+    const [error, response] = await catchErrorTyped(getUserInfo(), [
+      AuthErrors,
+      ApiErrors,
+    ]);
+    if (error instanceof ApiErrors) {
       Toast.show({
         type: "error",
         text1: "Thông báo",
-        text2: response.error?.non_field_errors,
+        text2: error.message,
       });
     }
 
@@ -101,7 +106,7 @@ const ProfileView = ({ userInfo }: { userInfo: UserInfo }) => {
 
       <Button
         variant={"outline"}
-        onPress={auth.logout}
+        onPress={logout}
         className="items-start shadow-sm shadow-foreground/5"
       >
         <View className="flex-row items-center gap-2">

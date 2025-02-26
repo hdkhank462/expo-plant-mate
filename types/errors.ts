@@ -1,7 +1,7 @@
 type AppErrorType = "network" | "service" | "unknown";
 
 type AppError = {
-  code: number;
+  code: string;
   message: string;
 };
 

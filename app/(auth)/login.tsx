@@ -1,7 +1,7 @@
 import { Link, useNavigation } from "expo-router";
 import React, { useEffect } from "react";
 import { Image, View } from "react-native";
-import auth from "~/api/auth";
+import { AuthErrors, loginWithCreds, loginWithGoogle } from "~/api/auth";
 import FormField from "~/components/FormField";
 import GoogleLoginButton from "~/components/GoogleLoginButton";
 import LoadingOverlay from "~/components/LoadingOverlay";
@@ -16,6 +16,8 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { Text } from "~/components/ui/text";
+import { ApiErrors } from "~/lib/axios.config";
+import { catchErrorTyped } from "~/lib/utils";
 import { loginSchema, LoginSchema } from "~/schemas/auth.schema";
 
 const DEFAULT_LOGIN_FORM: LoginSchema = {
@@ -38,13 +40,15 @@ const LoginScreen = () => {
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
-    const response = await auth.loginWithGoogle();
-    if (response.isSuccess) {
+
+    const [error] = await catchErrorTyped(loginWithGoogle(), [
+      AuthErrors,
+      ApiErrors,
+    ]);
+    if (!error) {
       navigation.goBack();
-    } else {
-      setErrors(response.error);
-      if (response.error?.non_field_errors) setIsErrorDialogOpen(true);
     }
+
     setIsLoading(false);
   };
 
@@ -158,13 +162,17 @@ const FormView = (props: FormViewProps) => {
     if (!isValid) return;
 
     props.setIsLoading(true);
-    const response = await auth.loginWithCreds(props.form);
-    if (response.isSuccess) {
+
+    const [error] = await catchErrorTyped(loginWithCreds(props.form), [
+      AuthErrors<LoginSchema>,
+      ApiErrors,
+    ]);
+    if (error instanceof AuthErrors) {
+      props.setErrors(error.properties);
+    } else if (!error) {
       navigation.goBack();
-    } else {
-      props.setErrors(response.error);
-      if (response.error?.non_field_errors) props.setIsErrorDialogOpen(true);
     }
+
     props.setIsLoading(false);
   };
 
