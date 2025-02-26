@@ -7,9 +7,12 @@ import { STORAGE_KEYS } from "./constants";
 type GlobalStore = {
   isInitialized: boolean;
   isAuthenticated: boolean;
+  isAppLoading: boolean;
+  appError?: AppError;
   userInfo: UserInfo | null;
   authToken: AuthToken | null;
   initializeGlobalStore: () => Promise<void>;
+  setAppErrorPopupOpen: (value: boolean) => void;
 };
 
 export const useGlobalStore = create<GlobalStore>((set) => ({
@@ -17,6 +20,8 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
 
   isInitialized: false,
   isAuthenticated: false,
+  isAppLoading: false,
+  appError: undefined,
   userInfo: null,
   authToken: null,
 
@@ -42,6 +47,16 @@ export const useGlobalStore = create<GlobalStore>((set) => ({
     set((state) => ({
       isInitialized: true,
     }));
+  },
+
+  //-------------------- Error handling --------------------
+
+  setAppErrorPopupOpen: (isOpen) => {
+    if (!isOpen) {
+      set((state) => ({
+        appError: undefined,
+      }));
+    }
   },
 }));
 

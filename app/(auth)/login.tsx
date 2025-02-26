@@ -1,22 +1,16 @@
 import { Link, useNavigation } from "expo-router";
 import React, { useEffect } from "react";
 import { Image, View } from "react-native";
+import Toast from "react-native-toast-message";
 import { AuthErrors, loginWithCreds, loginWithGoogle } from "~/api/auth";
+import { useErrorPopup } from "~/components/ErrorPopupBoundary";
 import FormField from "~/components/FormField";
 import GoogleLoginButton from "~/components/GoogleLoginButton";
-import LoadingOverlay from "~/components/LoadingOverlay";
 import { Button } from "~/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
+import { DialogTrigger } from "~/components/ui/dialog";
 import { Text } from "~/components/ui/text";
 import { ApiErrors } from "~/lib/axios.config";
+import { useGlobalStore } from "~/lib/global-store";
 import { catchErrorTyped } from "~/lib/utils";
 import { loginSchema, LoginSchema } from "~/schemas/auth.schema";
 
@@ -27,72 +21,39 @@ const DEFAULT_LOGIN_FORM: LoginSchema = {
 
 const LoginScreen = () => {
   const navigation = useNavigation();
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isErrorDialogOpen, setIsErrorDialogOpen] = React.useState(false);
-  const [form, setForm] = React.useState<LoginSchema>(DEFAULT_LOGIN_FORM);
-  const [errors, setErrors] = React.useState<LoginError>();
-
-  useEffect(() => {
-    if (errors?.password) {
-      setForm((prev) => ({ ...prev, password: "" }));
-    }
-  }, [errors]);
+  const { showErrorPopup: setErrorPopup } = useErrorPopup();
 
   const handleGoogleLogin = async () => {
-    setIsLoading(true);
+    useGlobalStore.setState({ isAppLoading: true });
 
     const [error] = await catchErrorTyped(loginWithGoogle(), [
       AuthErrors,
       ApiErrors,
     ]);
-    if (!error) {
+    if (error === undefined) {
       navigation.goBack();
+    } else if (error instanceof ApiErrors) {
+      // Toast.show({
+      //   type: "error",
+      //   text1: "Thông báo",
+      //   text2: error.message,
+      // });
+      setErrorPopup({ message: error.message });
+    } else {
+      setErrorPopup();
     }
 
-    setIsLoading(false);
+    useGlobalStore.setState({ isAppLoading: false });
   };
 
   return (
-    <View className="flex-1 pt-6 bg-secondary/30">
-      <Dialog open={isErrorDialogOpen} onOpenChange={setIsErrorDialogOpen}>
-        <View className="relative h-full">
-          <View className="justify-center h-full p-4 pt-6">
-            <View className="gap-6">
-              <LogoAndTitleView />
-              <FormView
-                form={form}
-                errors={errors}
-                setForm={setForm}
-                setErrors={setErrors}
-                setIsLoading={setIsLoading}
-                setIsErrorDialogOpen={setIsErrorDialogOpen}
-              />
-              <LinksView />
-              <GoogleLoginButton onPress={handleGoogleLogin} />
-            </View>
-          </View>
-
-          {isLoading && <LoadingOverlay />}
-        </View>
-        <DialogContent className="min-w-[16rem] sm:max-w-[425px] p-4">
-          <DialogHeader>
-            <DialogTitle>Thông báo</DialogTitle>
-            <DialogDescription>
-              <Text className="text-sm text-muted-foreground">
-                {errors?.non_field_errors ??
-                  "Lỗi không xác định.\nVui lòng kiểm tra lại kết nối internet và thử lại."}
-              </Text>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button size={"sm"}>
-                <Text>OK</Text>
-              </Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+    <View className="flex-1 pt-7 bg-secondary/30">
+      <View className="gap-6 p-4">
+        <LogoAndTitleView />
+        <FormView />
+        <LinksContainer />
+        <GoogleLoginButton onPress={handleGoogleLogin} />
+      </View>
     </View>
   );
 };
@@ -110,29 +71,28 @@ const LogoAndTitleView = () => {
   );
 };
 
-interface FormViewProps {
-  form: LoginSchema;
-  errors?: LoginError;
-  setForm: (value: React.SetStateAction<LoginSchema>) => void;
-  setErrors: (value: React.SetStateAction<LoginError | undefined>) => void;
-  setIsLoading: (value: React.SetStateAction<boolean>) => void;
-  setIsErrorDialogOpen: (value: React.SetStateAction<boolean>) => void;
-}
-
-const FormView = (props: FormViewProps) => {
+const FormView = () => {
   const navigation = useNavigation();
+  const [form, setForm] = React.useState<LoginSchema>(DEFAULT_LOGIN_FORM);
+  const [formErrors, setFormErrors] =
+    React.useState<{ [key in keyof LoginSchema]?: string }>();
+  const { showErrorPopup: setErrorPopup } = useErrorPopup();
+
+  useEffect(() => {
+    if (formErrors?.password) {
+      setForm((prev) => ({ ...prev, password: "" }));
+    }
+  }, [formErrors]);
 
   const validateForm = (form: LoginSchema): boolean => {
     const isValid = loginSchema.safeParse(form);
 
     if (!isValid.success) {
       const fieldErrors = isValid.error.formErrors.fieldErrors;
-      props.setErrors({
+      setFormErrors({
         email: fieldErrors.email?.[0],
         password: fieldErrors.password?.[0],
       });
-    } else {
-      props.setErrors({});
     }
 
     return isValid.success;
@@ -142,15 +102,15 @@ const FormView = (props: FormViewProps) => {
     const result = loginSchema.shape[field].safeParse(value);
 
     if (!result.success) {
-      props.setErrors((prevErrors) => ({
+      setFormErrors((prevErrors) => ({
         ...prevErrors,
         [field]: result.error.errors[0].message,
       }));
       if (field === "password") {
-        props.setForm((prevForm) => ({ ...prevForm, password: "" }));
+        setForm((prevForm) => ({ ...prevForm, password: "" }));
       }
     } else {
-      props.setErrors((prevErrors) => ({
+      setFormErrors((prevErrors) => ({
         ...prevErrors,
         [field]: undefined,
       }));
@@ -158,32 +118,36 @@ const FormView = (props: FormViewProps) => {
   };
 
   const handleLogin = async () => {
-    const isValid = validateForm(props.form);
+    const isValid = validateForm(form);
     if (!isValid) return;
 
-    props.setIsLoading(true);
+    useGlobalStore.setState({ isAppLoading: true });
 
-    const [error] = await catchErrorTyped(loginWithCreds(props.form), [
+    const [error] = await catchErrorTyped(loginWithCreds(form), [
       AuthErrors<LoginSchema>,
       ApiErrors,
     ]);
-    if (error instanceof AuthErrors) {
-      props.setErrors(error.properties);
-    } else if (!error) {
+    if (error === undefined) {
       navigation.goBack();
+    } else if (error instanceof ApiErrors) {
+      setErrorPopup({ message: error.message });
+    } else if (error instanceof AuthErrors) {
+      setFormErrors(error.properties);
+    } else {
+      setErrorPopup();
     }
 
-    props.setIsLoading(false);
+    useGlobalStore.setState({ isAppLoading: false });
   };
 
   return (
     <View className="gap-2">
       <FormField
-        value={props.form.email}
-        errorMessage={props.errors?.email}
+        value={form.email}
+        errorMessage={formErrors?.email}
         onChangeText={(text) => {
-          const updatedForm = { ...props.form, email: text };
-          props.setForm(updatedForm);
+          const updatedForm: LoginSchema = { ...form, email: text };
+          setForm(updatedForm);
           validateField("email", text);
         }}
         nativeID="email"
@@ -194,11 +158,11 @@ const FormView = (props: FormViewProps) => {
       />
 
       <FormField
-        value={props.form.password}
-        errorMessage={props.errors?.password}
+        value={form.password}
+        errorMessage={formErrors?.password}
         onChangeText={(text) => {
-          const updatedForm = { ...props.form, password: text };
-          props.setForm(updatedForm);
+          const updatedForm = { ...form, password: text };
+          setForm(updatedForm);
           validateField("password", text);
         }}
         nativeID="password"
@@ -214,7 +178,7 @@ const FormView = (props: FormViewProps) => {
   );
 };
 
-const LinksView = () => {
+const LinksContainer = () => {
   return (
     <View className="flex-row justify-between">
       <Link href={"/(auth)/register"} replace>

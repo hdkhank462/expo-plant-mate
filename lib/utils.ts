@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { AppErrors } from "~/lib/errors";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -30,10 +31,13 @@ export function catchErrorTyped<T, E extends new (...args: any) => Error>(
       return [undefined, data] as [undefined, T];
     })
     .catch((error) => {
-      console.log(`${error.name}:`, error.code);
+      if (error instanceof AppErrors)
+        console.error(`${error.name}:`, error.code);
+      else console.error(error);
 
       if (errorsToCatch === undefined) return [error];
       if (errorsToCatch.some((e) => error instanceof e)) return [error];
-      throw error;
+
+      return [error];
     });
 }

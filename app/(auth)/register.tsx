@@ -5,7 +5,7 @@ import { Text } from "~/components/ui/text";
 
 const RegisterScreen = () => {
   return (
-    <View className="flex-1 p-4 pt-10 bg-secondary/30">
+    <View className="flex-1 p-4 pt-7 bg-secondary/30">
       <Text>RegisterScreen</Text>
       <Link href={"/(auth)/login"} replace>
         <Text className="font-bold underline">Đăng nhập</Text>

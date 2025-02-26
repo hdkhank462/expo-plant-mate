@@ -24,8 +24,3 @@ type LoginResponse = {
   refresh: string;
   user: UserInfo;
 };
-
-interface LoginError extends ApiError {
-  email?: string;
-  password?: string;
-}

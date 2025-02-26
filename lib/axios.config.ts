@@ -31,14 +31,15 @@ const getHeaders = async ({
   const authTokens = await storage.get<AuthToken>(STORAGE_KEYS.AUTH_TOKEN);
   const defaultHeaders = {
     ...DEFAULT_HEADERS,
-    ...(withToken && authTokens && { Authorization: `Bearer ${authTokens}` }),
+    ...(withToken &&
+      authTokens && { Authorization: `Bearer ${authTokens.access}` }),
   };
   return overide && headers ? headers : { ...defaultHeaders, ...headers };
 };
 
 interface Request {
   url: string;
-  methord: "get" | "post" | "put" | "delete";
+  method: "get" | "post" | "put" | "delete";
   data?: any;
   config?: AxiosRequestConfig<any>;
 }
@@ -46,11 +47,11 @@ interface Request {
 export class ApiErrors extends AppErrors {
   name = "ApiErrors";
 
-  constructor(error?: AppError) {
+  constructor(error: AppError) {
     super(error);
   }
 
-  static NetworkError: AppError = {
+  static readonly NetworkError: AppError = {
     code: "NETWORK_ERROR",
     message:
       "Không thể kết nối đến máy chủ.\nVui lòng kiểm tra kết nối mạng và thử lại.",
@@ -62,18 +63,25 @@ export class ApiErrors extends AppErrors {
 
 const request = async <TResponse, TInput = any>({
   url,
-  methord,
+  method,
   data,
   config,
 }: Request) => {
-  console.log("Request:", JSON.stringify({ url, methord, data, config }));
+  console.log(
+    "Request:",
+    JSON.stringify({ url, method, data, config }, null, 2)
+  );
   try {
-    const response = await instance[methord]<TInput, AxiosResponse<TResponse>>(
+    if (method === "get" || method === "delete") {
+      data = { ...config, ...data };
+    }
+
+    const response = await instance[method]<TInput, AxiosResponse<TResponse>>(
       url,
       data,
       config
     );
-    console.log("Response:", response.data);
+    console.log("Response:", JSON.stringify(response.data, null, 2));
     return response;
   } catch (error) {
     if (isAxiosError(error)) {
@@ -89,22 +97,14 @@ const get = async <TResponse, TInput = any>(
   url: string,
   config?: AxiosRequestConfig<any>
 ) => {
-  return request<TResponse, TInput>({
-    url,
-    methord: "get",
-    config,
-  });
+  return instance.get<TInput, AxiosResponse<TResponse>>(url, config);
 };
 
 const deleteReq = async <TResponse, TInput = any>(
   url: string,
-  config?: { params?: any; headers?: any }
+  config?: AxiosRequestConfig<any>
 ) => {
-  return request<TResponse, TInput>({
-    url,
-    methord: "delete",
-    config,
-  });
+  return instance.delete<TInput, AxiosResponse<TResponse>>(url, config);
 };
 
 const post = async <TResponse, TInput = any>(
@@ -112,12 +112,7 @@ const post = async <TResponse, TInput = any>(
   data?: any,
   config?: AxiosRequestConfig<any>
 ) => {
-  return request<TResponse, TInput>({
-    url,
-    methord: "post",
-    data,
-    config,
-  });
+  return instance.post<TInput, AxiosResponse<TResponse>>(url, data, config);
 };
 
 const put = async <TResponse, TInput = any>(
@@ -125,12 +120,7 @@ const put = async <TResponse, TInput = any>(
   data?: any,
   config?: AxiosRequestConfig<any>
 ) => {
-  return request<TResponse, TInput>({
-    url,
-    methord: "put",
-    data,
-    config,
-  });
+  return instance.put<TInput, AxiosResponse<TResponse>>(url, data, config);
 };
 
 const api = { get, post, put, delete: deleteReq, request, getHeaders };

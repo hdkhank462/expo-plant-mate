@@ -12,11 +12,13 @@ import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import { Platform } from "react-native";
 import SplashScreen from "~/app/splash";
+import { ErrorPopupProvider } from "~/components/ErrorPopupBoundary";
+import LoadingOverlay from "~/components/LoadingOverlay";
+import { ToastProvider } from "~/components/ui/toast";
 import { NAV_THEME } from "~/lib/constants";
 import { useGlobalStore } from "~/lib/global-store";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { delay } from "~/lib/utils";
-import { ToastProvider } from "~/components/ui/toast";
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -38,6 +40,7 @@ export default function RootLayout() {
     (state) => state.initializeGlobalStore
   );
   const isInitialized = useGlobalStore((state) => state.isInitialized);
+  const isAppLoading = useGlobalStore((state) => state.isAppLoading);
   const [isAppReady, setisAppReady] = useState(false);
 
   useIsomorphicLayoutEffect(() => {
@@ -73,19 +76,22 @@ export default function RootLayout() {
     <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
       <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
 
-      <Stack
-        screenOptions={{
-          animation: "fade_from_bottom",
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="menu" options={{ headerShown: false }} />
-        <Stack.Screen name="form" options={{ headerShown: false }} />
-        <Stack.Screen name="toast" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" options={{ headerShown: false }} />
-      </Stack>
+      <ErrorPopupProvider>
+        <Stack
+          screenOptions={{
+            animation: "fade_from_bottom",
+          }}
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="menu" options={{ headerShown: false }} />
+          <Stack.Screen name="form" options={{ headerShown: false }} />
+          <Stack.Screen name="toast" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+        </Stack>
+      </ErrorPopupProvider>
 
+      {isAppLoading && <LoadingOverlay />}
       <ToastProvider />
       <PortalHost />
     </ThemeProvider>

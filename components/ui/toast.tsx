@@ -57,6 +57,7 @@ function ToastProvider() {
       config={TOAST_CONFIG}
       topOffset={insets.top}
       bottomOffset={insets.bottom}
+      // autoHide={false}
     />
   );
 }

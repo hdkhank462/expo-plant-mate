@@ -39,7 +39,7 @@ const ProfileScreen = () => {
   }, []);
 
   return (
-    <SafeAreaView>
+    <SafeAreaView className="h-full">
       <ScrollView
         ref={scrollRef}
         contentContainerClassName="p-4 bg-secondary/30 min-h-full"
@@ -47,20 +47,20 @@ const ProfileScreen = () => {
         automaticallyAdjustContentInsets={false}
         contentInset={{ top: 12 }}
         refreshControl={
-          <Refresher
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            className="bg-secondary text-primary"
-          />
+          userInfo ? (
+            <Refresher
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              className="bg-secondary text-primary"
+            />
+          ) : undefined
         }
       >
-        <View className="">
-          {userInfo ? (
-            <ProfileView userInfo={userInfo} />
-          ) : (
-            <UnauthenticatedView />
-          )}
-        </View>
+        {userInfo ? (
+          <ProfileView userInfo={userInfo} />
+        ) : (
+          <UnauthenticatedView />
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -116,12 +116,6 @@ const ProfileView = ({ userInfo }: { userInfo: UserInfo }) => {
           </Text>
         </View>
       </Button>
-      <Link href={"/form"}>
-        <Text>Form Test</Text>
-      </Link>
-      <Link href={"/toast"}>
-        <Text>Toast Test</Text>
-      </Link>
     </View>
   );
 };
