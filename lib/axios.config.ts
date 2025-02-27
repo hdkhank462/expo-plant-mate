@@ -44,23 +44,6 @@ interface Request {
   config?: AxiosRequestConfig<any>;
 }
 
-export class ApiErrors extends AppErrors {
-  name = "ApiErrors";
-
-  constructor(error: AppError) {
-    super(error);
-  }
-
-  static readonly NetworkError: AppError = {
-    code: "NETWORK_ERROR",
-    message:
-      "Không thể kết nối đến máy chủ.\nVui lòng kiểm tra kết nối mạng và thử lại.",
-  };
-  static networkError() {
-    return new ApiErrors(this.NetworkError);
-  }
-}
-
 const request = async <TResponse, TInput = any>({
   url,
   method,
@@ -86,7 +69,7 @@ const request = async <TResponse, TInput = any>({
   } catch (error) {
     if (isAxiosError(error)) {
       if (error.code === AxiosError.ERR_NETWORK) {
-        throw ApiErrors.networkError();
+        throw AppErrors.networkError();
       }
     }
     throw error;

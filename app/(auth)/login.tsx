@@ -1,15 +1,17 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigation } from "expo-router";
-import React, { useEffect } from "react";
-import { Image, View } from "react-native";
-import Toast from "react-native-toast-message";
-import { AuthErrors, loginWithCreds, loginWithGoogle } from "~/api/auth";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { ScrollView, View } from "react-native";
+import { AuthErrors, GoogleSigninErrors, loginWithCreds } from "~/api/auth";
+import LogoContainer from "~/app/(auth)/_components/_LogoContainer";
 import { useErrorPopup } from "~/components/ErrorPopupBoundary";
-import FormField from "~/components/FormField";
 import GoogleLoginButton from "~/components/GoogleLoginButton";
+import Separator from "~/components/Separator";
 import { Button } from "~/components/ui/button";
-import { DialogTrigger } from "~/components/ui/dialog";
+import { Form, FormField, FormInput } from "~/components/ui/form";
 import { Text } from "~/components/ui/text";
-import { ApiErrors } from "~/lib/axios.config";
+import { AppErrors } from "~/lib/errors";
 import { useGlobalStore } from "~/lib/global-store";
 import { catchErrorTyped } from "~/lib/utils";
 import { loginSchema, LoginSchema } from "~/schemas/auth.schema";
@@ -20,170 +22,108 @@ const DEFAULT_LOGIN_FORM: LoginSchema = {
 };
 
 const LoginScreen = () => {
-  const navigation = useNavigation();
-  const { showErrorPopup: setErrorPopup } = useErrorPopup();
-
-  const handleGoogleLogin = async () => {
-    useGlobalStore.setState({ isAppLoading: true });
-
-    const [error] = await catchErrorTyped(loginWithGoogle(), [
-      AuthErrors,
-      ApiErrors,
-    ]);
-    if (error === undefined) {
-      navigation.goBack();
-    } else if (error instanceof ApiErrors) {
-      // Toast.show({
-      //   type: "error",
-      //   text1: "Thông báo",
-      //   text2: error.message,
-      // });
-      setErrorPopup({ message: error.message });
-    } else {
-      setErrorPopup();
-    }
-
-    useGlobalStore.setState({ isAppLoading: false });
-  };
+  const scrollRef = React.useRef<ScrollView>(null);
 
   return (
-    <View className="flex-1 pt-7 bg-secondary/30">
-      <View className="gap-6 p-4">
-        <LogoAndTitleView />
-        <FormView />
-        <LinksContainer />
-        <GoogleLoginButton onPress={handleGoogleLogin} />
+    <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false}>
+      <LogoContainer />
+      <View className="gap-4">
+        <Text className="text-2xl font-bold text-center">
+          Đăng nhập tài khoản
+        </Text>
+        <FormContainer />
+        <Separator label="hoặc" />
+        <GoogleLoginButton />
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
-const LogoAndTitleView = () => {
-  return (
-    <View className="items-center">
-      <Image
-        className="h-32 aspect-square"
-        source={require("~/assets/images/logo/adaptive-icon/foreground.png")}
-        resizeMode="contain"
-      />
-      <Text className="text-2xl font-bold">Đăng nhập tài khoản</Text>
-    </View>
-  );
-};
-
-const FormView = () => {
+const FormContainer = () => {
   const navigation = useNavigation();
-  const [form, setForm] = React.useState<LoginSchema>(DEFAULT_LOGIN_FORM);
-  const [formErrors, setFormErrors] =
-    React.useState<{ [key in keyof LoginSchema]?: string }>();
-  const { showErrorPopup: setErrorPopup } = useErrorPopup();
+  const { showErrorPopup } = useErrorPopup();
 
-  useEffect(() => {
-    if (formErrors?.password) {
-      setForm((prev) => ({ ...prev, password: "" }));
-    }
-  }, [formErrors]);
+  const form = useForm<LoginSchema>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: DEFAULT_LOGIN_FORM,
+  });
 
-  const validateForm = (form: LoginSchema): boolean => {
-    const isValid = loginSchema.safeParse(form);
-
-    if (!isValid.success) {
-      const fieldErrors = isValid.error.formErrors.fieldErrors;
-      setFormErrors({
-        email: fieldErrors.email?.[0],
-        password: fieldErrors.password?.[0],
-      });
-    }
-
-    return isValid.success;
-  };
-
-  const validateField = (field: keyof LoginSchema, value: string): void => {
-    const result = loginSchema.shape[field].safeParse(value);
-
-    if (!result.success) {
-      setFormErrors((prevErrors) => ({
-        ...prevErrors,
-        [field]: result.error.errors[0].message,
-      }));
-      if (field === "password") {
-        setForm((prevForm) => ({ ...prevForm, password: "" }));
-      }
-    } else {
-      setFormErrors((prevErrors) => ({
-        ...prevErrors,
-        [field]: undefined,
-      }));
-    }
-  };
-
-  const handleLogin = async () => {
-    const isValid = validateForm(form);
-    if (!isValid) return;
-
+  const onSubmit = async (values: LoginSchema) => {
     useGlobalStore.setState({ isAppLoading: true });
 
-    const [error] = await catchErrorTyped(loginWithCreds(form), [
-      AuthErrors<LoginSchema>,
-      ApiErrors,
+    const [error] = await catchErrorTyped(loginWithCreds(values), [
+      AuthErrors,
+      AppErrors,
     ]);
-    if (error === undefined) {
-      navigation.goBack();
-    } else if (error instanceof ApiErrors) {
-      setErrorPopup({ message: error.message });
-    } else if (error instanceof AuthErrors) {
-      setFormErrors(error.properties);
+
+    if (error) {
+      form.setValue("password", "");
+      let popupError;
+
+      if (
+        "code" in error &&
+        (error.code == AuthErrors.InvalidCredentials.code ||
+          error.code == AppErrors.NetworkError.code)
+      )
+        popupError = { message: error.message };
+
+      showErrorPopup(popupError);
     } else {
-      setErrorPopup();
+      navigation.goBack();
     }
 
     useGlobalStore.setState({ isAppLoading: false });
   };
 
   return (
-    <View className="gap-2">
-      <FormField
-        value={form.email}
-        errorMessage={formErrors?.email}
-        onChangeText={(text) => {
-          const updatedForm: LoginSchema = { ...form, email: text };
-          setForm(updatedForm);
-          validateField("email", text);
-        }}
-        nativeID="email"
-        title="Địa chỉ email"
-        placeholder="Email của bạn"
-        keyboardType="email-address"
-        required
-      />
-
-      <FormField
-        value={form.password}
-        errorMessage={formErrors?.password}
-        onChangeText={(text) => {
-          const updatedForm = { ...form, password: text };
-          setForm(updatedForm);
-          validateField("password", text);
-        }}
-        nativeID="password"
-        title="Mật khẩu"
-        placeholder="Mật khẩu của bạn"
-        password
-        required
-      />
-      <Button onPress={handleLogin}>
-        <Text className="font-bold">Đăng nhập</Text>
-      </Button>
-    </View>
+    <Form {...form}>
+      <View className="gap-4">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormInput
+              label="Địa chỉ email"
+              placeholder="Email của bạn"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              required
+              {...field}
+            />
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormInput
+              label="Mật khẩu"
+              placeholder="Mật khẩu của bạn"
+              password
+              required
+              {...field}
+            />
+          )}
+        />
+        <LinksContainer />
+        <Button onPress={form.handleSubmit(onSubmit)}>
+          <Text className="font-bold">Đăng nhập</Text>
+        </Button>
+      </View>
+    </Form>
   );
 };
 
 const LinksContainer = () => {
   return (
     <View className="flex-row justify-between">
-      <Link href={"/(auth)/register"} replace>
-        <Text className="text-sm font-bold underline ">Đăng ký tài khoản</Text>
-      </Link>
+      <View className="flex-row gap-1">
+        <Text className="text-sm">Chưa có tài khoản?</Text>
+        <Link href={"/(auth)/register"} replace>
+          <Text className="text-sm font-bold underline ">Đăng ký ngay</Text>
+        </Link>
+      </View>
       <Link href={"/(auth)/register"} replace>
         <Text className="text-sm font-bold underline">Quên mật khẩu?</Text>
       </Link>

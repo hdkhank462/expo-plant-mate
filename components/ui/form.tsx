@@ -14,6 +14,7 @@ import {
 } from "react-hook-form";
 import { View } from "react-native";
 import Animated, { FadeInDown, FadeOut } from "react-native-reanimated";
+import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -23,6 +24,8 @@ import { Switch } from "~/components/ui/switch";
 import { Text } from "~/components/ui/text";
 import { Textarea } from "~/components/ui/textarea";
 import { cn } from "~/lib/utils";
+import { Eye } from "~/lib/icons/Eye";
+import { EyeOff } from "~/lib/icons/EyeOff";
 
 const Form = FormProvider;
 
@@ -108,8 +111,8 @@ const FormLabel = React.forwardRef<
     <Label
       ref={ref}
       className={cn(
-        "pb-1 native:pb-2 px-px",
-        error && "text-destructive",
+        "pb-1 native:pb-2 px-px font-bold",
+        // error && "text-destructive",
         className
       )}
       nativeID={formItemNativeID}
@@ -129,7 +132,7 @@ const FormDescription = React.forwardRef<
     <Text
       ref={ref}
       nativeID={formDescriptionNativeID}
-      className={cn("text-sm text-muted-foreground pt-1", className)}
+      className={cn("text-sm text-muted-foreground", className)}
       {...props}
     />
   );
@@ -182,65 +185,130 @@ type FormItemProps<T extends React.ElementType<any>, U> = Override<
 
 const FormInput = React.forwardRef<
   React.ElementRef<typeof Input>,
-  FormItemProps<typeof Input, string>
->(({ label, description, onChange, ...props }, ref) => {
-  const inputRef = React.useRef<React.ComponentRef<typeof Input>>(null);
-  const {
-    error,
-    formItemNativeID,
-    formDescriptionNativeID,
-    formMessageNativeID,
-  } = useFormField();
-
-  React.useImperativeHandle(
-    ref,
-    () => {
-      if (!inputRef.current) {
-        return {} as React.ComponentRef<typeof Input>;
-      }
-      return inputRef.current;
-    },
-    [inputRef.current]
-  );
-
-  function handleOnLabelPress() {
-    if (!inputRef.current) {
-      return;
-    }
-    if (inputRef.current.isFocused()) {
-      inputRef.current?.blur();
-    } else {
-      inputRef.current?.focus();
-    }
+  FormItemProps<typeof Input, string> & {
+    iconStart?: React.ReactNode;
+    iconEnd?: React.ReactNode;
+    password?: boolean;
+    required?: boolean;
   }
+>(
+  (
+    {
+      label,
+      description,
+      iconStart,
+      iconEnd,
+      password,
+      required,
+      onChange,
+      ...props
+    },
+    ref
+  ) => {
+    const [isPasswordVisible, setIsPasswordVisible] = React.useState(password);
+    const toggleVisible = () => setIsPasswordVisible(!isPasswordVisible);
+    const inputRef = React.useRef<React.ComponentRef<typeof Input>>(null);
+    const {
+      error,
+      formItemNativeID,
+      formDescriptionNativeID,
+      formMessageNativeID,
+    } = useFormField();
 
-  return (
-    <FormItem>
-      {!!label && (
-        <FormLabel nativeID={formItemNativeID} onPress={handleOnLabelPress}>
-          {label}
-        </FormLabel>
-      )}
-
-      <Input
-        ref={inputRef}
-        aria-labelledby={formItemNativeID}
-        aria-describedby={
-          !error
-            ? `${formDescriptionNativeID}`
-            : `${formDescriptionNativeID} ${formMessageNativeID}`
+    React.useImperativeHandle(
+      ref,
+      () => {
+        if (!inputRef.current) {
+          return {} as React.ComponentRef<typeof Input>;
         }
-        aria-invalid={!!error}
-        onChangeText={onChange}
-        {...props}
-      />
-      {!!description && <FormDescription>{description}</FormDescription>}
-      <FormMessage />
-    </FormItem>
-  );
-});
+        return inputRef.current;
+      },
+      [inputRef.current]
+    );
+
+    function handleOnLabelPress() {
+      if (!inputRef.current) {
+        return;
+      }
+      if (inputRef.current.isFocused()) {
+        inputRef.current?.blur();
+      } else {
+        inputRef.current?.focus();
+      }
+    }
+
+    return (
+      <FormItem>
+        {!!label && (
+          <View className="flex-row">
+            <FormLabel nativeID={formItemNativeID} onPress={handleOnLabelPress}>
+              {label}
+            </FormLabel>
+            {required && (
+              <Text className="py-1 font-bold leading-none text-destructive">
+                *
+              </Text>
+            )}
+          </View>
+        )}
+
+        <View className="relative">
+          {iconStart}
+          <Input
+            ref={inputRef}
+            aria-labelledby={formItemNativeID}
+            aria-describedby={
+              !error
+                ? `${formDescriptionNativeID}`
+                : `${formDescriptionNativeID} ${formMessageNativeID}`
+            }
+            aria-invalid={!!error}
+            onChangeText={onChange}
+            className={cn("mb-1", props.className)}
+            {...props}
+            secureTextEntry={isPasswordVisible}
+          />
+          {iconEnd
+            ? iconEnd
+            : password && (
+                <PasswordToggleButton
+                  visible={isPasswordVisible}
+                  onPress={toggleVisible}
+                />
+              )}
+        </View>
+
+        {!!description && <FormDescription>{description}</FormDescription>}
+        <FormMessage />
+      </FormItem>
+    );
+  }
+);
 
 FormInput.displayName = "FormInput";
+
+const PasswordToggleButton = ({
+  visible,
+  onPress,
+}: {
+  visible?: boolean;
+  onPress?: () => void;
+}) => {
+  return (
+    <Button
+      variant={"ghost"}
+      size={"icon"}
+      onPress={onPress}
+      className="absolute top-1 right-1"
+    >
+      {visible ? (
+        <Eye className="text-muted-foreground" size={20} />
+      ) : (
+        <EyeOff className="text-muted-foreground" size={20} />
+      )}
+    </Button>
+  );
+};
 
 const FormTextarea = React.forwardRef<
   React.ElementRef<typeof Textarea>,

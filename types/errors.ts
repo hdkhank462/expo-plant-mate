@@ -12,5 +12,5 @@ type ApiResponse<TError, TData = any> = {
 };
 
 type ApiError = {
-  non_field_errors?: string;
+  non_field_errors?: string[];
 };

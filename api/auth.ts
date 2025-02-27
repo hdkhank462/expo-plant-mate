@@ -1,17 +1,21 @@
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import {
+  GoogleSignin,
+  isErrorWithCode,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
 import { AxiosError } from "axios";
-import api, { ApiErrors } from "~/lib/axios.config";
+import api from "~/lib/axios.config";
 import { STORAGE_KEYS } from "~/lib/constants";
 import { AppErrors } from "~/lib/errors";
 import { useGlobalStore } from "~/lib/global-store";
 import storage from "~/lib/storage";
-import { LoginSchema } from "~/schemas/auth.schema";
+import { LoginSchema, RegisterSchema } from "~/schemas/auth.schema";
 
 export class AuthErrors<T> extends AppErrors {
   name = "AuthErrors";
-  properties?: { [key in keyof T]?: string };
+  properties?: { [key in keyof T]?: string[] };
 
-  constructor(error: AppError, properties?: { [key in keyof T]?: string }) {
+  constructor(error: AppError, properties?: { [key in keyof T]?: string[] }) {
     super(error);
     this.properties = properties;
   }
@@ -20,6 +24,10 @@ export class AuthErrors<T> extends AppErrors {
     code: "INVALID_CREDENTIALS",
     message: "Email hoặc mật khẩu không chính xác",
   };
+  static readonly InvalidRegistrationSchema: AppError = {
+    code: "INVALID_REGISTRATION_SCHEMA",
+    message: "Invalid registration schema",
+  };
   static readonly Unauthorized = {
     code: "UNAUTHORIZED",
     message: "Unauthorized",
@@ -27,8 +35,25 @@ export class AuthErrors<T> extends AppErrors {
 
   static invalidCredentials() {
     return new AuthErrors<LoginSchema>(this.InvalidCredentials, {
-      password: this.InvalidCredentials.message,
+      password: [this.InvalidCredentials.message],
     });
+  }
+
+  static invalidRegistrationSchema(errors: RegisterErrorResponse) {
+    const { email, password1, password2, non_field_errors } = errors;
+    const properties: { [key: string]: string[] } = {};
+
+    if (non_field_errors) {
+      return AppErrors.invalidSchema(non_field_errors);
+    }
+    if (email) properties.email = email;
+    if (password1) properties.password = password1;
+    if (password2) properties.confirmPassword = password2;
+
+    return new AuthErrors<RegisterSchema>(
+      this.InvalidRegistrationSchema,
+      properties
+    );
   }
 
   static async unauthorized() {
@@ -44,6 +69,72 @@ export class AuthErrors<T> extends AppErrors {
     return new AuthErrors(this.Unauthorized);
   }
 }
+
+export class GoogleSigninErrors extends AppErrors {
+  name = "GoogleSigninErrors";
+
+  static readonly SignInRequired = "getTokens";
+  static readonly SignInNetworkError = "7";
+
+  static signInCancelled() {
+    return new GoogleSigninErrors(
+      {
+        code: "SIGN_IN_CANCELLED",
+        message: statusCodes.SIGN_IN_CANCELLED,
+      },
+      { cause: "@react-native-google-signin/google-signin" }
+    );
+  }
+
+  static signInRequired() {
+    return new GoogleSigninErrors(
+      {
+        code: "SIGN_IN_REQUIRED",
+        message: statusCodes.SIGN_IN_REQUIRED,
+      },
+      { cause: "@react-native-google-signin/google-signin" }
+    );
+  }
+}
+
+const register = async (schema: RegisterSchema) => {
+  console.log("Registering with credentials");
+
+  try {
+    const response = await api.request<LoginResponse>({
+      url: "/auth/register/",
+      method: "post",
+      data: {
+        email: schema.email,
+        password1: schema.password,
+        password2: schema.confirmPassword,
+      },
+    });
+
+    const authToken: AuthToken = {
+      access: response.data.access,
+      refresh: response.data.refresh,
+    };
+
+    useGlobalStore.setState({
+      isAuthenticated: true,
+      userInfo: response.data.user,
+      authToken,
+    });
+
+    // Save to storage
+    await storage.set(STORAGE_KEYS.AUTH_TOKEN, authToken);
+    await storage.set(STORAGE_KEYS.USER_INFO, response.data.user);
+
+    return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      if (error.response?.status === 400)
+        throw AuthErrors.invalidRegistrationSchema(error.response.data);
+    }
+    throw error;
+  }
+};
 
 const loginWithCreds = async (schema: LoginSchema) => {
   console.log("Logging in with credentials");
@@ -82,9 +173,27 @@ const loginWithCreds = async (schema: LoginSchema) => {
 const getGoogleTokens = async () => {
   if (GoogleSignin.hasPreviousSignIn()) await GoogleSignin.signOut();
 
-  await GoogleSignin.signIn();
-  const access_token = (await GoogleSignin.getTokens()).accessToken;
-  return access_token;
+  try {
+    await GoogleSignin.signIn();
+    const access_token = (await GoogleSignin.getTokens()).accessToken;
+    return access_token;
+  } catch (error) {
+    if (isErrorWithCode(error)) {
+      switch (error.code) {
+        // case statusCodes.SIGN_IN_CANCELLED:
+        //   throw GoogleSigninErrors.signInCancelled();
+        // case statusCodes.SIGN_IN_REQUIRED:
+        //   throw GoogleSigninErrors.signInRequired();
+        case GoogleSigninErrors.SignInRequired:
+          throw GoogleSigninErrors.signInCancelled();
+        case GoogleSigninErrors.SignInNetworkError:
+          throw AppErrors.networkError();
+        // default:
+        //   throw AppErrors.unknownError({ cause: error });
+      }
+    }
+    // throw error;
+  }
 };
 
 const loginWithGoogle = async () => {
@@ -165,4 +274,4 @@ const logout = async () => {
   }
 };
 
-export { getUserInfo, loginWithCreds, loginWithGoogle, logout };
+export { getUserInfo, register, loginWithCreds, loginWithGoogle, logout };

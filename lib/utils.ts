@@ -32,7 +32,9 @@ export function catchErrorTyped<T, E extends new (...args: any) => Error>(
     })
     .catch((error) => {
       if (error instanceof AppErrors)
-        console.error(`${error.name}:`, error.code);
+        console.error(
+          `${error.name}: [code="${error.code}"; cause="${error.cause}"]`
+        );
       else console.error(error);
 
       if (errorsToCatch === undefined) return [error];

@@ -9,7 +9,7 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import { Text } from "~/components/ui/text";
 import UnauthenticatedView from "~/components/UnauthenticatedView";
-import { ApiErrors } from "~/lib/axios.config";
+import { AppErrors } from "~/lib/errors";
 import { useGlobalStore } from "~/lib/global-store";
 import { CalendarClock } from "~/lib/icons/CalendarClock";
 import { LogOut } from "~/lib/icons/LogOut";
@@ -25,9 +25,12 @@ const ProfileScreen = () => {
 
     const [error, response] = await catchErrorTyped(getUserInfo(), [
       AuthErrors,
-      ApiErrors,
+      AppErrors,
     ]);
-    if (error instanceof ApiErrors) {
+    if (
+      error instanceof AppErrors &&
+      error.code == AppErrors.NetworkError.code
+    ) {
       Toast.show({
         type: "error",
         text1: "Thông báo",

@@ -24,3 +24,9 @@ type LoginResponse = {
   refresh: string;
   user: UserInfo;
 };
+
+interface RegisterErrorResponse extends ApiError {
+  email?: string[];
+  password1?: string[];
+  password2?: string[];
+}
