@@ -3,7 +3,7 @@ import { Link, useNavigation } from "expo-router";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { ScrollView, View } from "react-native";
-import { AuthErrors, GoogleSigninErrors, loginWithCreds } from "~/api/auth";
+import { AuthErrors, loginWithCreds } from "~/api/auth";
 import LogoContainer from "~/app/(auth)/_components/_LogoContainer";
 import { useErrorPopup } from "~/components/ErrorPopupBoundary";
 import GoogleLoginButton from "~/components/GoogleLoginButton";
@@ -51,24 +51,18 @@ const FormContainer = () => {
   const onSubmit = async (values: LoginSchema) => {
     useGlobalStore.setState({ isAppLoading: true });
 
-    const [error] = await catchErrorTyped(loginWithCreds(values), [
+    const [error, data] = await catchErrorTyped(loginWithCreds(values), [
       AuthErrors,
       AppErrors,
     ]);
 
     if (error) {
       form.setValue("password", "");
-      let popupError;
-
-      if (
-        "code" in error &&
-        (error.code == AuthErrors.InvalidCredentials.code ||
-          error.code == AppErrors.NetworkError.code)
-      )
-        popupError = { message: error.message };
-
-      showErrorPopup(popupError);
-    } else {
+      if (error instanceof AuthErrors)
+        // TODO: Handle email not verified
+        showErrorPopup({ message: error.message });
+      if (error.code === AppErrors.UnknownError.code) showErrorPopup();
+    } else if (!!data) {
       navigation.goBack();
     }
 

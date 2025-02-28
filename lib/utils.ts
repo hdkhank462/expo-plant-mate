@@ -40,6 +40,6 @@ export function catchErrorTyped<T, E extends new (...args: any) => Error>(
       if (errorsToCatch === undefined) return [error];
       if (errorsToCatch.some((e) => error instanceof e)) return [error];
 
-      return [error];
+      return [undefined];
     });
 }

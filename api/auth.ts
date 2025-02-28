@@ -24,24 +24,29 @@ export class AuthErrors<T> extends AppErrors {
     code: "INVALID_CREDENTIALS",
     message: "Email hoặc mật khẩu không chính xác",
   };
+  static readonly EmailNotVerified: AppError = {
+    code: "EMAIL_NOT_VERIFIED",
+    message: "Email chưa được xác thực",
+  };
   static readonly InvalidRegistrationSchema: AppError = {
     code: "INVALID_REGISTRATION_SCHEMA",
     message: "Invalid registration schema",
   };
 
-  static invalidCredentials() {
-    return new AuthErrors<LoginSchema>(this.InvalidCredentials, {
-      password: [this.InvalidCredentials.message],
-    });
+  static invalidCredentials(errors: LoginErrorResponse) {
+    const { non_field_errors } = errors;
+
+    if (non_field_errors && non_field_errors[0].includes("not verified"))
+      return new AuthErrors(this.EmailNotVerified);
+
+    return new AuthErrors(this.InvalidCredentials);
   }
 
   static invalidRegistrationSchema(errors: RegisterErrorResponse) {
     const { email, password1, password2, non_field_errors } = errors;
     const properties: { [key: string]: string[] } = {};
 
-    if (non_field_errors) {
-      return AppErrors.invalidSchema(non_field_errors);
-    }
+    if (non_field_errors) return AppErrors.invalidSchema(non_field_errors);
     if (email) properties.email = email;
     if (password1) properties.password = password1;
     if (password2) properties.confirmPassword = password2;
@@ -115,7 +120,7 @@ const register = async (schema: RegisterSchema) => {
       if (error.response?.status === 400)
         throw AuthErrors.invalidRegistrationSchema(error.response.data);
     }
-    throw error;
+    throw AppErrors.unknownError({ cause: error });
   }
 };
 
@@ -147,9 +152,12 @@ const loginWithCreds = async (schema: LoginSchema) => {
     return response.data;
   } catch (error) {
     if (error instanceof AxiosError) {
-      if (error.response?.status === 400) throw AuthErrors.invalidCredentials();
+      if (error.response?.status === 400)
+        throw AuthErrors.invalidCredentials(error.response.data);
     }
-    throw error;
+
+    if (error instanceof AppErrors) throw error;
+    throw AppErrors.unknownError({ cause: error });
   }
 };
 
@@ -163,19 +171,15 @@ const getGoogleTokens = async () => {
   } catch (error) {
     if (isErrorWithCode(error)) {
       switch (error.code) {
-        // case statusCodes.SIGN_IN_CANCELLED:
-        //   throw GoogleSigninErrors.signInCancelled();
-        // case statusCodes.SIGN_IN_REQUIRED:
-        //   throw GoogleSigninErrors.signInRequired();
-        case GoogleSigninErrors.SignInRequired:
+        case statusCodes.SIGN_IN_CANCELLED || GoogleSigninErrors.SignInRequired:
           throw GoogleSigninErrors.signInCancelled();
+        case statusCodes.SIGN_IN_REQUIRED:
+          throw GoogleSigninErrors.signInRequired();
         case GoogleSigninErrors.SignInNetworkError:
-          throw AppErrors.networkError();
-        // default:
-        //   throw AppErrors.unknownError({ cause: error });
+          throw AppErrors.networkError({ cause: error });
       }
     }
-    // throw error;
+    throw AppErrors.unknownError({ cause: error });
   }
 };
 

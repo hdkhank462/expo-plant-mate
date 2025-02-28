@@ -76,9 +76,9 @@ const ProfileView = ({ userInfo }: { userInfo: UserInfo }) => {
   const handleLogout = async () => {
     useGlobalStore.setState({ isAppLoading: true });
 
-    const [error] = await catchErrorTyped(logout(), [AuthErrors, AppErrors]);
+    const [error] = await catchErrorTyped(logout(), [AppErrors]);
 
-    if (error) {
+    if (error && error.code === AppErrors.UnknownError.code) {
       showErrorPopup();
     }
 

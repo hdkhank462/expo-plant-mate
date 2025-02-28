@@ -112,8 +112,15 @@ const request = async <TResponse, TInput = any>({
   } catch (error) {
     if (isAxiosError(error)) {
       if (error.code === AxiosError.ERR_NETWORK) {
-        throw AppErrors.networkError();
+        Toast.show({
+          type: "error",
+          text1: "Thông báo",
+          text2: AppErrors.NetworkError.message,
+        });
+        throw AppErrors.networkError({ cause: error });
       }
+
+      // Handle unauthorized & refresh token
       if (
         error.response?.data?.code !== "token_not_valid" &&
         error.response?.status === 401 &&

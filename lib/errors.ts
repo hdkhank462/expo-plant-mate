@@ -34,8 +34,8 @@ export class AppErrors extends Error {
     return new AppErrors(this.InvalidSchema, { cause: messages });
   }
 
-  static networkError() {
-    return new AppErrors(this.NetworkError);
+  static networkError(options?: ErrorOptions) {
+    return new AppErrors(this.NetworkError, options);
   }
   static unknownError(options?: ErrorOptions) {
     return new AppErrors(this.UnknownError, options);

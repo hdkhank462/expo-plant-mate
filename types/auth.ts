@@ -30,6 +30,11 @@ interface RegisterErrorResponse extends ApiError {
   password2?: string[];
 }
 
+interface LoginErrorResponse extends ApiError {
+  email?: string[];
+  password?: string[];
+}
+
 type RefreshTokenResponse = {
   access: string;
   access_expiration: string;
