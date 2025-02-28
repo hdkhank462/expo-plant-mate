@@ -7,11 +7,11 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { PortalHost } from "@rn-primitives/portal";
-import { Stack } from "expo-router";
+import { SplashScreen, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import { Platform } from "react-native";
-import SplashScreen from "~/app/splash";
+// import SplashScreen from "~/app/splash";
 import { ErrorPopupProvider } from "~/components/ErrorPopupBoundary";
 import LoadingOverlay from "~/components/LoadingOverlay";
 import { ToastProvider } from "~/components/ui/toast";
@@ -33,6 +33,8 @@ export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from "expo-router";
+
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const { colorScheme, isDarkColorScheme } = useColorScheme();
@@ -70,7 +72,7 @@ export default function RootLayout() {
     initializeRootLayout();
   }, []);
 
-  if (!isAppReady) return <SplashScreen />;
+  if (!isAppReady) return null;
 
   return (
     <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
@@ -84,9 +86,10 @@ export default function RootLayout() {
         >
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="menu" options={{ headerShown: false }} />
-          <Stack.Screen name="form" options={{ headerShown: false }} />
-          <Stack.Screen name="toast" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="search/[query]"
+            options={{ headerShown: false }}
+          />
           <Stack.Screen name="+not-found" options={{ headerShown: false }} />
         </Stack>
       </ErrorPopupProvider>

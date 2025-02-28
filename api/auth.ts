@@ -120,6 +120,8 @@ const register = async (schema: RegisterSchema) => {
       if (error.response?.status === 400)
         throw AuthErrors.invalidRegistrationSchema(error.response.data);
     }
+
+    if (error instanceof AppErrors) throw error;
     throw AppErrors.unknownError({ cause: error });
   }
 };

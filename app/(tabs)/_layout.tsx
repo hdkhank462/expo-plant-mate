@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import MenuButtonLink from "~/components/MenuButtonLink";
+import SearchButtonLink from "~/components/SearchButtonLink";
 import { Home } from "~/lib/icons/Home";
 import { User } from "~/lib/icons/User";
 import { Leaf } from "~/lib/icons/Leaf";
@@ -13,20 +13,20 @@ const TabsLayout = () => {
       tabBarInactiveClassName="bg-background text-primary/50"
       screenOptions={{
         headerStyle: {
-          height: 70,
+          height: 76,
         },
         tabBarLabelStyle: {
           fontWeight: "bold",
         },
         animation: "fade",
         headerTitleAlign: "center",
-        headerLeft: () => <MenuButtonLink />,
+        headerLeft: () => <SearchButtonLink />,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: "Trang chủ",
           tabBarIcon: ({ focused, color, size }) => (
             <Home
               size={size}
@@ -52,7 +52,7 @@ const TabsLayout = () => {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: "Bạn",
           tabBarIcon: ({ focused, color, size }) => (
             <User
               size={size}

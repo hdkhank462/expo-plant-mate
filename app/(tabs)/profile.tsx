@@ -2,8 +2,8 @@ import { Link } from "expo-router";
 import React from "react";
 import { SafeAreaView, ScrollView, View } from "react-native";
 import Toast from "react-native-toast-message";
-import { AuthErrors, getUserInfo, logout } from "~/api/auth";
-import { useErrorPopup } from "~/components/ErrorPopupBoundary";
+import { AuthErrors, getUserInfo } from "~/api/auth";
+import ButtonWithIcon from "~/components/LogoutButton";
 import Refresher from "~/components/Refresher";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
@@ -13,7 +13,9 @@ import UnauthenticatedView from "~/components/UnauthenticatedView";
 import { AppErrors } from "~/lib/errors";
 import { useGlobalStore } from "~/lib/global-store";
 import { CalendarClock } from "~/lib/icons/CalendarClock";
-import { LogOut } from "~/lib/icons/LogOut";
+import { LockKeyhole } from "~/lib/icons/LockKeyhole";
+import { Settings } from "~/lib/icons/Settings";
+import { User } from "~/lib/icons/User";
 import { catchErrorTyped } from "~/lib/utils";
 
 const ProfileScreen = () => {
@@ -43,13 +45,11 @@ const ProfileScreen = () => {
   }, []);
 
   return (
-    <SafeAreaView className="h-full">
+    <SafeAreaView className="h-full bg-secondary">
       <ScrollView
         ref={scrollRef}
-        contentContainerClassName="p-4 bg-secondary/30 min-h-full"
+        contentContainerClassName="min-h-full p-4"
         showsVerticalScrollIndicator={false}
-        automaticallyAdjustContentInsets={false}
-        contentInset={{ top: 12 }}
         refreshControl={
           userInfo ? (
             <Refresher
@@ -71,20 +71,6 @@ const ProfileScreen = () => {
 };
 
 const ProfileView = ({ userInfo }: { userInfo: UserInfo }) => {
-  const { showErrorPopup } = useErrorPopup();
-
-  const handleLogout = async () => {
-    useGlobalStore.setState({ isAppLoading: true });
-
-    const [error] = await catchErrorTyped(logout(), [AppErrors]);
-
-    if (error && error.code === AppErrors.UnknownError.code) {
-      showErrorPopup();
-    }
-
-    useGlobalStore.setState({ isAppLoading: false });
-  };
-
   return (
     <View className="gap-4">
       <View className="items-center gap-2">
@@ -106,34 +92,43 @@ const ProfileView = ({ userInfo }: { userInfo: UserInfo }) => {
           </Text>
         </View>
       </View>
-      <ProfileContentCard title="Ngày tham gia">
-        <View className="flex-row items-center gap-2">
-          <CalendarClock
-            className="text-card-foreground"
-            size={16}
-            strokeWidth={2}
-          />
-          <Text className="text-lg">
-            {new Date(userInfo.date_joined).toLocaleString("vi-VN", {
-              timeStyle: "short",
-              dateStyle: "medium",
-            })}
-          </Text>
-        </View>
-      </ProfileContentCard>
+      <DateJoinedCard userInfo={userInfo} />
 
-      <Button
-        variant={"outline"}
-        onPress={handleLogout}
-        className="items-start shadow-sm shadow-foreground/5"
-      >
-        <View className="flex-row items-center gap-2">
-          <LogOut className="text-destructive" size={16} strokeWidth={2} />
-          <Text className="font-bold text-destructive group-active:text-destructive">
-            Đăng xuất
-          </Text>
-        </View>
-      </Button>
+      <Link href={"/"} asChild>
+        <Button
+          variant={"outline"}
+          className="items-start shadow-sm shadow-foreground/5"
+        >
+          <View className="flex-row items-center gap-4">
+            <User className="text-primary" size={16} strokeWidth={2} />
+            <Text className="font-bold">Cập nhật thông tin tài khoản</Text>
+          </View>
+        </Button>
+      </Link>
+      <Link href={"/"} asChild>
+        <Button
+          variant={"outline"}
+          className="items-start shadow-sm shadow-foreground/5"
+        >
+          <View className="flex-row items-center gap-4">
+            <LockKeyhole className="text-primary" size={16} strokeWidth={2} />
+            <Text className="font-bold">Đổi mật khẩu</Text>
+          </View>
+        </Button>
+      </Link>
+      <Link href={"/"} asChild>
+        <Button
+          variant={"outline"}
+          className="items-start shadow-sm shadow-foreground/5"
+        >
+          <View className="flex-row items-center gap-4">
+            <Settings className="text-primary" size={16} strokeWidth={2} />
+            <Text className="font-bold">Cài đặt</Text>
+          </View>
+        </Button>
+      </Link>
+
+      <ButtonWithIcon />
     </View>
   );
 };
@@ -151,6 +146,26 @@ const ProfileContentCard = ({ title, children }: ProfileContentCardProps) => {
       </CardHeader>
       <CardContent className="px-4 pb-3">{children}</CardContent>
     </Card>
+  );
+};
+
+const DateJoinedCard = ({ userInfo }: { userInfo: UserInfo }) => {
+  return (
+    <ProfileContentCard title="Ngày tham gia">
+      <View className="flex-row items-center gap-2">
+        <CalendarClock
+          className="text-card-foreground"
+          size={16}
+          strokeWidth={2}
+        />
+        <Text className="text-lg">
+          {new Date(userInfo.date_joined).toLocaleString("vi-VN", {
+            timeStyle: "short",
+            dateStyle: "medium",
+          })}
+        </Text>
+      </View>
+    </ProfileContentCard>
   );
 };
 
