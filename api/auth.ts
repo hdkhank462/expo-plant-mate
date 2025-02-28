@@ -28,10 +28,6 @@ export class AuthErrors<T> extends AppErrors {
     code: "INVALID_REGISTRATION_SCHEMA",
     message: "Invalid registration schema",
   };
-  static readonly Unauthorized = {
-    code: "UNAUTHORIZED",
-    message: "Unauthorized",
-  };
 
   static invalidCredentials() {
     return new AuthErrors<LoginSchema>(this.InvalidCredentials, {
@@ -54,19 +50,6 @@ export class AuthErrors<T> extends AppErrors {
       this.InvalidRegistrationSchema,
       properties
     );
-  }
-
-  static async unauthorized() {
-    useGlobalStore.setState({
-      isAuthenticated: false,
-      authToken: null,
-      userInfo: null,
-    });
-
-    // Remove from storage
-    await storage.remove(STORAGE_KEYS.AUTH_TOKEN);
-    await storage.remove(STORAGE_KEYS.USER_INFO);
-    return new AuthErrors(this.Unauthorized);
   }
 }
 
@@ -199,79 +182,64 @@ const getGoogleTokens = async () => {
 const loginWithGoogle = async () => {
   console.log("Logging in with Google");
 
-  try {
-    const access_token = await getGoogleTokens();
-    const response = await api.request<LoginResponse>({
-      url: "/auth/google/",
-      method: "post",
-      data: { access_token },
-    });
+  const access_token = await getGoogleTokens();
+  const response = await api.request<LoginResponse>({
+    url: "/auth/google/",
+    method: "post",
+    data: { access_token },
+  });
 
-    const authToken: AuthToken = {
-      access: response.data.access,
-      refresh: response.data.refresh,
-    };
+  const authToken: AuthToken = {
+    access: response.data.access,
+    refresh: response.data.refresh,
+  };
 
-    useGlobalStore.setState({
-      isAuthenticated: true,
-      userInfo: response.data.user,
-      authToken,
-    });
+  useGlobalStore.setState({
+    isAuthenticated: true,
+    userInfo: response.data.user,
+    authToken,
+  });
 
-    // Save to storage
-    await storage.set(STORAGE_KEYS.AUTH_TOKEN, authToken);
-    await storage.set(STORAGE_KEYS.USER_INFO, response.data.user);
-    return response.data;
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      if (error.response?.status === 401) throw await AuthErrors.unauthorized();
-    }
-    throw error;
-  }
+  // Save to storage
+  await storage.set(STORAGE_KEYS.AUTH_TOKEN, authToken);
+  await storage.set(STORAGE_KEYS.USER_INFO, response.data.user);
+  return response.data;
 };
 
 const getUserInfo = async () => {
   console.log("Getting user info");
 
-  const headers = await api.getHeaders({ withToken: true });
-  try {
-    const response = await api.request<UserInfo>({
-      url: "/auth/user/",
-      method: "get",
-      config: { headers },
-    });
-    useGlobalStore.setState({ userInfo: response.data });
+  const response = await api.request<UserInfo>({
+    url: "/auth/user/",
+    method: "get",
+  });
 
-    await storage.set(STORAGE_KEYS.USER_INFO, response.data);
-    return response.data;
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      if (error.response?.status === 400) throw AuthErrors.invalidCredentials();
-      if (error.response?.status === 401) throw await AuthErrors.unauthorized();
-    }
-    throw error;
-  }
+  useGlobalStore.setState({ userInfo: response.data });
+
+  await storage.set(STORAGE_KEYS.USER_INFO, response.data);
+  return response.data;
 };
 
 const logout = async () => {
   console.log("Logging out");
 
-  try {
-    useGlobalStore.setState({
-      userInfo: null,
-      authToken: null,
-      isAuthenticated: false,
-    });
-
-    if (GoogleSignin.hasPreviousSignIn()) {
-      await GoogleSignin.signOut();
-    }
-
-    await storage.remove(STORAGE_KEYS.AUTH_TOKEN);
-    await storage.remove(STORAGE_KEYS.USER_INFO);
-  } catch (error) {
-    console.error("Error during logout:", error);
+  if (GoogleSignin.hasPreviousSignIn()) {
+    await GoogleSignin.signOut();
   }
+
+  await api.request({
+    url: "/auth/logout/",
+    method: "post",
+  });
+
+  useGlobalStore.setState({
+    userInfo: null,
+    authToken: null,
+    isAuthenticated: false,
+  });
+
+  await storage.remove(STORAGE_KEYS.AUTH_TOKEN);
+  await storage.remove(STORAGE_KEYS.USER_INFO);
 };
 
 export { getUserInfo, register, loginWithCreds, loginWithGoogle, logout };

@@ -3,6 +3,7 @@ import React from "react";
 import { SafeAreaView, ScrollView, View } from "react-native";
 import Toast from "react-native-toast-message";
 import { AuthErrors, getUserInfo, logout } from "~/api/auth";
+import { useErrorPopup } from "~/components/ErrorPopupBoundary";
 import Refresher from "~/components/Refresher";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
@@ -70,13 +71,27 @@ const ProfileScreen = () => {
 };
 
 const ProfileView = ({ userInfo }: { userInfo: UserInfo }) => {
+  const { showErrorPopup } = useErrorPopup();
+
+  const handleLogout = async () => {
+    useGlobalStore.setState({ isAppLoading: true });
+
+    const [error] = await catchErrorTyped(logout(), [AuthErrors, AppErrors]);
+
+    if (error) {
+      showErrorPopup();
+    }
+
+    useGlobalStore.setState({ isAppLoading: false });
+  };
+
   return (
     <View className="gap-4">
       <View className="items-center gap-2">
         <Avatar alt="Avatar" className="w-24 h-24">
           <AvatarImage
             source={{
-              uri: userInfo.avatar_url ?? userInfo.social_avatar_url,
+              uri: userInfo.avatar_url,
             }}
           />
           <AvatarFallback>
@@ -109,7 +124,7 @@ const ProfileView = ({ userInfo }: { userInfo: UserInfo }) => {
 
       <Button
         variant={"outline"}
-        onPress={logout}
+        onPress={handleLogout}
         className="items-start shadow-sm shadow-foreground/5"
       >
         <View className="flex-row items-center gap-2">

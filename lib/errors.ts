@@ -11,6 +11,14 @@ export class AppErrors extends Error {
     code: "INVALID_SCHEMA",
     message: "Invalid schema",
   };
+  static readonly Unauthorized = {
+    code: "UNAUTHORIZED",
+    message: "Unauthorized",
+  };
+  static readonly SessionExpired = {
+    code: "SESSION_EXPIRED",
+    message: "Phiên đăng nhập đã hết hạn",
+  };
   static readonly NetworkError: AppError = {
     code: "NETWORK_ERROR",
     message:
@@ -25,6 +33,7 @@ export class AppErrors extends Error {
   static invalidSchema(messages: string[]) {
     return new AppErrors(this.InvalidSchema, { cause: messages });
   }
+
   static networkError() {
     return new AppErrors(this.NetworkError);
   }

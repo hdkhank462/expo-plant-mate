@@ -9,7 +9,6 @@ type UserInfo = {
   date_joined: string;
   last_login: string;
   avatar_url: string;
-  social_avatar_url: string;
   groups: string[];
   user_permissions: string[];
 };
@@ -30,3 +29,8 @@ interface RegisterErrorResponse extends ApiError {
   password1?: string[];
   password2?: string[];
 }
+
+type RefreshTokenResponse = {
+  access: string;
+  access_expiration: string;
+};
