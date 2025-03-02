@@ -6,29 +6,24 @@ import {
 import { AxiosError } from "axios";
 import api from "~/lib/axios.config";
 import { STORAGE_KEYS } from "~/lib/constants";
-import { AppErrors } from "~/lib/errors";
+import { AppErrors, BaseSchemaError, ErrorWithCode } from "~/lib/errors";
 import { useGlobalStore } from "~/lib/global-store";
 import storage from "~/lib/storage";
 import { LoginSchema, RegisterSchema } from "~/schemas/auth.schema";
 
-export class AuthErrors<T> extends AppErrors {
+export class AuthErrors<T> extends BaseSchemaError<T> {
   name = "AuthErrors";
-  properties?: { [key in keyof T]?: string[] };
 
-  constructor(error: AppError, properties?: { [key in keyof T]?: string[] }) {
-    super(error);
-    this.properties = properties;
-  }
-
-  static readonly InvalidCredentials: AppError = {
+  static readonly InvalidCredentials = {
     code: "INVALID_CREDENTIALS",
     message: "Email hoặc mật khẩu không chính xác",
   };
-  static readonly EmailNotVerified: AppError = {
+  static readonly EmailNotVerified = {
     code: "EMAIL_NOT_VERIFIED",
-    message: "Email chưa được xác thực",
+    message:
+      "Email chưa được xác thực\nVui lòng kiểm tra hòm thư của bạn để xác thực tài khoản",
   };
-  static readonly InvalidRegistrationSchema: AppError = {
+  static readonly InvalidRegistrationSchema = {
     code: "INVALID_REGISTRATION_SCHEMA",
     message: "Invalid registration schema",
   };
@@ -37,9 +32,9 @@ export class AuthErrors<T> extends AppErrors {
     const { non_field_errors } = errors;
 
     if (non_field_errors && non_field_errors[0].includes("not verified"))
-      return new AuthErrors(this.EmailNotVerified);
+      return new this(this.EmailNotVerified);
 
-    return new AuthErrors(this.InvalidCredentials);
+    return new this(this.InvalidCredentials);
   }
 
   static invalidRegistrationSchema(errors: RegisterErrorResponse) {
@@ -51,21 +46,18 @@ export class AuthErrors<T> extends AppErrors {
     if (password1) properties.password = password1;
     if (password2) properties.confirmPassword = password2;
 
-    return new AuthErrors<RegisterSchema>(
-      this.InvalidRegistrationSchema,
-      properties
-    );
+    return new this<RegisterSchema>(this.InvalidRegistrationSchema, properties);
   }
 }
 
-export class GoogleSigninErrors extends AppErrors {
+export class GoogleSigninErrors extends ErrorWithCode {
   name = "GoogleSigninErrors";
 
   static readonly SignInRequired = "getTokens";
   static readonly SignInNetworkError = "7";
 
   static signInCancelled() {
-    return new GoogleSigninErrors(
+    return new this(
       {
         code: "SIGN_IN_CANCELLED",
         message: statusCodes.SIGN_IN_CANCELLED,
@@ -75,7 +67,7 @@ export class GoogleSigninErrors extends AppErrors {
   }
 
   static signInRequired() {
-    return new GoogleSigninErrors(
+    return new this(
       {
         code: "SIGN_IN_REQUIRED",
         message: statusCodes.SIGN_IN_REQUIRED,
@@ -248,4 +240,4 @@ const logout = async () => {
   await storage.remove(STORAGE_KEYS.USER_INFO);
 };
 
-export { getUserInfo, register, loginWithCreds, loginWithGoogle, logout };
+export { getUserInfo, loginWithCreds, loginWithGoogle, logout, register };

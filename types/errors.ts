@@ -1,6 +1,6 @@
 type AppErrorType = "network" | "service" | "unknown";
 
-type AppError = {
+type ErrorObject = {
   code?: string;
   message: string;
 };

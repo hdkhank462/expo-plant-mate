@@ -4,7 +4,7 @@ import { View } from "react-native";
 
 const LoadingOverlay = () => {
   return (
-    <View className="absolute inset-0 items-center justify-center bg-black/30">
+    <View className="absolute inset-0 items-center justify-center bg-secondary/50">
       <LottieView
         source={require("~/assets/lottiefiles/circle-loading.json")}
         style={{ width: "50%", height: "50%" }}

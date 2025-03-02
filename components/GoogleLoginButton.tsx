@@ -1,4 +1,4 @@
-import { useNavigation } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import { loginWithGoogle } from "~/api/auth";
 import GoogleSvg from "~/assets/icons/icons8-google.svg";
 import { Button } from "~/components/ui/button";
@@ -7,15 +7,15 @@ import { useGlobalStore } from "~/lib/global-store";
 import { catchErrorTyped } from "~/lib/utils";
 
 const GoogleLoginButton = (props: { children?: string }) => {
-  const navigation = useNavigation();
+  const router = useRouter();
 
   const handleGoogleLogin = async () => {
     useGlobalStore.setState({ isAppLoading: true });
 
-    const [error, data] = await catchErrorTyped(loginWithGoogle(), []);
+    const [error, response] = await catchErrorTyped(loginWithGoogle(), []);
 
-    if (!!data) {
-      navigation.goBack();
+    if (!!response) {
+      router.replace("/(tabs)/profile");
     }
 
     useGlobalStore.setState({ isAppLoading: false });

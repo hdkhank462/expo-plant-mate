@@ -1,20 +1,18 @@
 import { Link } from "expo-router";
 import React from "react";
 import { SafeAreaView, ScrollView, View } from "react-native";
-import Toast from "react-native-toast-message";
-import { AuthErrors, getUserInfo } from "~/api/auth";
+import { getUserInfo } from "~/api/auth";
+import CardWithTitle from "~/components/CardWithTitle";
 import ButtonWithIcon from "~/components/LogoutButton";
 import Refresher from "~/components/Refresher";
+import { ThemeToggle } from "~/components/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import { Text } from "~/components/ui/text";
 import UnauthenticatedView from "~/components/UnauthenticatedView";
-import { AppErrors } from "~/lib/errors";
 import { useGlobalStore } from "~/lib/global-store";
 import { CalendarClock } from "~/lib/icons/CalendarClock";
-import { LockKeyhole } from "~/lib/icons/LockKeyhole";
-import { Settings } from "~/lib/icons/Settings";
+import { MoonStar } from "~/lib/icons/MoonStar";
 import { User } from "~/lib/icons/User";
 import { catchErrorTyped } from "~/lib/utils";
 
@@ -26,30 +24,17 @@ const ProfileScreen = () => {
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
 
-    const [error, response] = await catchErrorTyped(getUserInfo(), [
-      AuthErrors,
-      AppErrors,
-    ]);
-    if (
-      error instanceof AppErrors &&
-      error.code == AppErrors.NetworkError.code
-    ) {
-      Toast.show({
-        type: "error",
-        text1: "Thông báo",
-        text2: error.message,
-      });
-    }
+    await catchErrorTyped(getUserInfo(), []);
 
     setRefreshing(false);
   }, []);
 
   return (
-    <SafeAreaView className="h-full bg-secondary">
+    <SafeAreaView className="h-full bg-secondary/30">
       <ScrollView
         ref={scrollRef}
-        contentContainerClassName="min-h-full p-4"
         showsVerticalScrollIndicator={false}
+        contentContainerClassName="p-4"
         refreshControl={
           userInfo ? (
             <Refresher
@@ -94,64 +79,38 @@ const ProfileView = ({ userInfo }: { userInfo: UserInfo }) => {
       </View>
       <DateJoinedCard userInfo={userInfo} />
 
-      <Link href={"/"} asChild>
+      <Link href={"/account"} asChild>
         <Button
           variant={"outline"}
           className="items-start shadow-sm shadow-foreground/5"
         >
           <View className="flex-row items-center gap-4">
             <User className="text-primary" size={16} strokeWidth={2} />
-            <Text className="font-bold">Cập nhật thông tin tài khoản</Text>
-          </View>
-        </Button>
-      </Link>
-      <Link href={"/"} asChild>
-        <Button
-          variant={"outline"}
-          className="items-start shadow-sm shadow-foreground/5"
-        >
-          <View className="flex-row items-center gap-4">
-            <LockKeyhole className="text-primary" size={16} strokeWidth={2} />
-            <Text className="font-bold">Đổi mật khẩu</Text>
-          </View>
-        </Button>
-      </Link>
-      <Link href={"/"} asChild>
-        <Button
-          variant={"outline"}
-          className="items-start shadow-sm shadow-foreground/5"
-        >
-          <View className="flex-row items-center gap-4">
-            <Settings className="text-primary" size={16} strokeWidth={2} />
-            <Text className="font-bold">Cài đặt</Text>
+            <Text className="font-bold">Tài khoản</Text>
           </View>
         </Button>
       </Link>
 
+      <Button
+        variant={"outline"}
+        className="shadow-sm shadow-foreground/5 !bg-background"
+      >
+        <View className="flex-row items-center justify-between w-full">
+          <View className="flex-row items-center gap-4">
+            <MoonStar className="text-primary" size={16} strokeWidth={2} />
+            <Text className="font-bold">Chế độ tối</Text>
+          </View>
+          <ThemeToggle className="mr-0" swtich />
+        </View>
+      </Button>
       <ButtonWithIcon />
     </View>
   );
 };
 
-interface ProfileContentCardProps {
-  title?: string;
-  children?: React.ReactNode;
-}
-
-const ProfileContentCard = ({ title, children }: ProfileContentCardProps) => {
-  return (
-    <Card>
-      <CardHeader className="px-4 pt-3 pb-1">
-        <Text className="text-sm font-bold text-muted-foreground">{title}</Text>
-      </CardHeader>
-      <CardContent className="px-4 pb-3">{children}</CardContent>
-    </Card>
-  );
-};
-
 const DateJoinedCard = ({ userInfo }: { userInfo: UserInfo }) => {
   return (
-    <ProfileContentCard title="Ngày tham gia">
+    <CardWithTitle title="Ngày tham gia">
       <View className="flex-row items-center gap-2">
         <CalendarClock
           className="text-card-foreground"
@@ -165,7 +124,7 @@ const DateJoinedCard = ({ userInfo }: { userInfo: UserInfo }) => {
           })}
         </Text>
       </View>
-    </ProfileContentCard>
+    </CardWithTitle>
   );
 };
 

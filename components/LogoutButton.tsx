@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { logout } from "~/api/auth";
-import { useErrorPopup } from "~/components/ErrorPopupBoundary";
+import { usePopup } from "~/components/PopupProvider";
 import { Button, ButtonProps } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
 import { AppErrors } from "~/lib/errors";
@@ -10,7 +10,7 @@ import { LogOut } from "~/lib/icons/LogOut";
 import { catchErrorTyped, cn } from "~/lib/utils";
 
 const LogoutButton = ({ children, className }: ButtonProps) => {
-  const { showErrorPopup } = useErrorPopup();
+  const popup = usePopup();
 
   const handleLogout = async () => {
     useGlobalStore.setState({ isAppLoading: true });
@@ -18,7 +18,7 @@ const LogoutButton = ({ children, className }: ButtonProps) => {
     const [error] = await catchErrorTyped(logout(), [AppErrors]);
 
     if (error && error.code === AppErrors.UnknownError.code) {
-      showErrorPopup();
+      popup.error();
     }
 
     useGlobalStore.setState({ isAppLoading: false });

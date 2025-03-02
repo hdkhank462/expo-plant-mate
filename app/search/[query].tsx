@@ -12,6 +12,7 @@ import { Search } from "~/lib/icons/Search";
 import { searchPlantSchema, SearchPlantSchema } from "~/schemas/plant.schema";
 import { Plus } from "~/lib/icons/Plus";
 import { Eye } from "~/lib/icons/Eye";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const SearchScreen = () => {
   const router = useRouter();
@@ -20,6 +21,7 @@ const SearchScreen = () => {
   const scrollRef = React.useRef<ScrollView>(null);
   const [refreshing, setRefreshing] = React.useState(false);
   const form = useForm<SearchPlantSchema>({
+    resolver: zodResolver(searchPlantSchema),
     defaultValues: {
       search: "",
     },
@@ -50,11 +52,11 @@ const SearchScreen = () => {
   };
 
   return (
-    <SafeAreaView className="h-full bg-secondary pt-7">
+    <SafeAreaView className="h-full bg-secondary/30 pt-7">
       <ScrollView
-        className="min-h-full p-4"
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
+        contentContainerClassName="p-4"
         refreshControl={
           <Refresher
             refreshing={refreshing}
@@ -63,7 +65,7 @@ const SearchScreen = () => {
           />
         }
       >
-        <View className="gap-4">
+        <View className="gap-4 border">
           <View>
             <Form {...form}>
               <FormField

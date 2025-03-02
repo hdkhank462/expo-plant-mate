@@ -8,7 +8,7 @@ type GlobalStore = {
   isInitialized: boolean;
   isAuthenticated: boolean;
   isAppLoading: boolean;
-  appError?: AppError;
+  appError?: ErrorObject;
   userInfo: UserInfo | null;
   authToken: AuthToken | null;
   initializeGlobalStore: () => Promise<void>;

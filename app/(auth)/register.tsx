@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, useNavigation } from "expo-router";
+import { Link, useNavigation, useRouter } from "expo-router";
 import React from "react";
 import { useForm } from "react-hook-form";
-import { ScrollView, View } from "react-native";
+import { SafeAreaView, ScrollView, View } from "react-native";
 import { AuthErrors, register } from "~/api/auth";
 import LogoContainer from "~/app/(auth)/_components/_LogoContainer";
-import { useErrorPopup } from "~/components/ErrorPopupBoundary";
+import { usePopup } from "~/components/PopupProvider";
 import GoogleLoginButton from "~/components/GoogleLoginButton";
 import Separator from "~/components/Separator";
 import { Button } from "~/components/ui/button";
@@ -20,23 +20,29 @@ const RegisterScreen = () => {
   const scrollRef = React.useRef<ScrollView>(null);
 
   return (
-    <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false}>
-      <LogoContainer />
-      <View className="gap-4">
-        <Text className="text-2xl font-bold text-center">
-          Đăng ký tài khoản
-        </Text>
-        <FormContainer />
-        <Separator label="hoặc" />
-        <GoogleLoginButton>Tiếp tục với Google</GoogleLoginButton>
-      </View>
-    </ScrollView>
+    <SafeAreaView className="h-full bg-secondary/30 pt-7">
+      <ScrollView
+        ref={scrollRef}
+        showsVerticalScrollIndicator={false}
+        contentContainerClassName="p-4"
+      >
+        <LogoContainer />
+        <View className="gap-4">
+          <Text className="text-2xl font-bold text-center">
+            Đăng ký tài khoản
+          </Text>
+          <FormContainer />
+          <Separator label="hoặc" />
+          <GoogleLoginButton>Tiếp tục với Google</GoogleLoginButton>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const FormContainer = () => {
-  const navigation = useNavigation();
-  const { showErrorPopup } = useErrorPopup();
+  const router = useRouter();
+  const popup = usePopup();
 
   const form = useForm<RegisterSchema>({
     resolver: zodResolver(registerSchema),
@@ -47,11 +53,13 @@ const FormContainer = () => {
   });
 
   const onSubmit = async (values: RegisterSchema) => {
+    console.log("Submit values:", values);
+    const schema = registerSchema.parse(values);
+
     useGlobalStore.setState({ isAppLoading: true });
 
-    const [error] = await catchErrorTyped(register(values), [
-      AuthErrors,
-      AppErrors,
+    const [error] = await catchErrorTyped(register(schema), [
+      AuthErrors<RegisterSchema>,
     ]);
 
     if (error) {
@@ -67,18 +75,16 @@ const FormContainer = () => {
             message: error.properties.password[0],
           });
         }
-      } else if (error instanceof AppErrors) {
-        let errors = "";
-        if (Array.isArray(error.cause)) {
-          errors = error.cause.join("\n");
-        }
-
-        showErrorPopup({ message: errors });
-      } else {
-        showErrorPopup();
       }
     } else {
-      navigation.goBack();
+      popup.confirm({
+        confirmButtonText: "Đăng nhập",
+        description:
+          "Đăng ký thành công\nEmail xác nhận đã được gửi\nVui lòng kiểm tra hòm thư của bạn",
+        onConfirm: () => {
+          router.replace("/(auth)/login");
+        },
+      });
     }
 
     useGlobalStore.setState({ isAppLoading: false });

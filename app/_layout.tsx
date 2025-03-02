@@ -12,7 +12,7 @@ import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import { Platform } from "react-native";
 // import SplashScreen from "~/app/splash";
-import { ErrorPopupProvider } from "~/components/ErrorPopupBoundary";
+import { PopupProvider } from "~/components/PopupProvider";
 import LoadingOverlay from "~/components/LoadingOverlay";
 import { ToastProvider } from "~/components/ui/toast";
 import { NAV_THEME } from "~/lib/constants";
@@ -34,7 +34,7 @@ export {
   ErrorBoundary,
 } from "expo-router";
 
-SplashScreen.preventAutoHideAsync();
+// SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const { colorScheme, isDarkColorScheme } = useColorScheme();
@@ -78,7 +78,7 @@ export default function RootLayout() {
     <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
       <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
 
-      <ErrorPopupProvider>
+      <PopupProvider>
         <Stack
           screenOptions={{
             animation: "fade_from_bottom",
@@ -87,12 +87,20 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen
+            name="account"
+            options={{
+              title: "Cập nhật thông tin tài khoản",
+              headerTitleAlign: "center",
+              headerShown: true,
+            }}
+          />
+          <Stack.Screen
             name="search/[query]"
             options={{ headerShown: false }}
           />
           <Stack.Screen name="+not-found" options={{ headerShown: false }} />
         </Stack>
-      </ErrorPopupProvider>
+      </PopupProvider>
 
       {isAppLoading && <LoadingOverlay />}
       <ToastProvider />

@@ -8,7 +8,7 @@ const UnauthenticatedView = () => {
   return (
     <View className="items-center justify-center h-full gap-6">
       <View className="items-center justify-center w-full">
-        <Text className="mb-4 text-4xl font-bold">401</Text>
+        {/* <Text className="mb-4 text-4xl font-bold">401</Text> */}
         <Text className="text-muted-foreground">
           Bạn chưa đăng nhập vào ứng dụng
         </Text>

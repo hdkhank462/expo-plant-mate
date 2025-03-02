@@ -78,7 +78,7 @@ const getHeaders = async ({
 
 interface Request {
   url: string;
-  method: "get" | "post" | "put" | "delete";
+  method: "get" | "post" | "put" | "delete" | "patch";
   data?: any;
   configs?: AxiosRequestConfig<any> & {
     refreshTokenOnUnauthorized?: boolean;
@@ -109,7 +109,12 @@ const request = async <TResponse, TInput = any>({
     // console.log("Full Response:", JSON.stringify(response, null, 2));
     console.log("Response Data:", JSON.stringify(response.data, null, 2));
     return response;
-  } catch (error) {
+  } catch (error: any) {
+    console.log(
+      "Error Response Data:",
+      JSON.stringify(error?.response?.data, null, 2)
+    );
+
     if (isAxiosError(error)) {
       if (error.code === AxiosError.ERR_NETWORK) {
         Toast.show({

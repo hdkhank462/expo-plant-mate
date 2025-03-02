@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, useNavigation } from "expo-router";
+import { Link, useNavigation, useRouter } from "expo-router";
 import React from "react";
 import { useForm } from "react-hook-form";
-import { ScrollView, View } from "react-native";
+import { SafeAreaView, ScrollView, View } from "react-native";
 import { AuthErrors, loginWithCreds } from "~/api/auth";
 import LogoContainer from "~/app/(auth)/_components/_LogoContainer";
-import { useErrorPopup } from "~/components/ErrorPopupBoundary";
+import { usePopup } from "~/components/PopupProvider";
 import GoogleLoginButton from "~/components/GoogleLoginButton";
 import Separator from "~/components/Separator";
 import { Button } from "~/components/ui/button";
@@ -25,23 +25,29 @@ const LoginScreen = () => {
   const scrollRef = React.useRef<ScrollView>(null);
 
   return (
-    <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false}>
-      <LogoContainer />
-      <View className="gap-4">
-        <Text className="text-2xl font-bold text-center">
-          Đăng nhập tài khoản
-        </Text>
-        <FormContainer />
-        <Separator label="hoặc" />
-        <GoogleLoginButton />
-      </View>
-    </ScrollView>
+    <SafeAreaView className="h-full bg-secondary/30 pt-7">
+      <ScrollView
+        ref={scrollRef}
+        showsVerticalScrollIndicator={false}
+        contentContainerClassName="p-4"
+      >
+        <LogoContainer />
+        <View className="gap-4">
+          <Text className="text-2xl font-bold text-center">
+            Đăng nhập tài khoản
+          </Text>
+          <FormContainer />
+          <Separator label="hoặc" />
+          <GoogleLoginButton />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const FormContainer = () => {
-  const navigation = useNavigation();
-  const { showErrorPopup } = useErrorPopup();
+  const router = useRouter();
+  const popup = usePopup();
 
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
@@ -60,10 +66,10 @@ const FormContainer = () => {
       form.setValue("password", "");
       if (error instanceof AuthErrors)
         // TODO: Handle email not verified
-        showErrorPopup({ message: error.message });
-      if (error.code === AppErrors.UnknownError.code) showErrorPopup();
+        popup.error({ description: error.message });
+      else popup.error();
     } else if (!!data) {
-      navigation.goBack();
+      router.replace("/(tabs)/profile");
     }
 
     useGlobalStore.setState({ isAppLoading: false });
@@ -118,7 +124,7 @@ const LinksContainer = () => {
           <Text className="text-sm font-bold underline ">Đăng ký ngay</Text>
         </Link>
       </View>
-      <Link href={"/(auth)/register"} replace>
+      <Link href={"/(auth)/password-reset"}>
         <Text className="text-sm font-bold underline">Quên mật khẩu?</Text>
       </Link>
     </View>
