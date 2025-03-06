@@ -50,11 +50,11 @@ const AccountSettingsScreen = () => {
   if (!userInfo) return null;
 
   return (
-    <SafeAreaView className="h-full bg-secondary/30">
+    <SafeAreaView className="min-h-[120%] bg-secondary/30">
       <ScrollView
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="p-4"
+        contentContainerClassName="p-4 min-h-[120%]"
       >
         <View className="gap-4">
           <CardWithTitle title="Thông tin tài khoản">

@@ -34,7 +34,7 @@ export {
   ErrorBoundary,
 } from "expo-router";
 
-// SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const { colorScheme, isDarkColorScheme } = useColorScheme();
@@ -63,9 +63,10 @@ export default function RootLayout() {
       if (!isInitialized) await initializeGlobalStore();
 
       // Wait for the splash screen to finish.
-      await delay(2310);
+      // await delay(2310);
 
       setisAppReady(true);
+      SplashScreen.hideAsync();
       console.log("App is ready!");
     };
 

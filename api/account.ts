@@ -10,7 +10,6 @@ import {
   CheckPasswordTokenSchema,
   EmailOnlySchema,
   ResetSetPasswordConfirmSchema,
-  SetPasswordSchema,
   UpdateAccountSchema,
 } from "~/schemas/account.schema";
 
@@ -257,10 +256,10 @@ const changePassword = async (schema: ChangePasswordSchema) => {
 };
 
 export {
-  updateAccount,
+  changePassword,
+  checkPasswordResetToken,
   emailVerification,
   resetPassword,
   resetPasswordConfirm,
-  checkPasswordResetToken,
-  changePassword,
+  updateAccount,
 };
