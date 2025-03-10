@@ -1,7 +1,22 @@
 import { AxiosError } from "axios";
 import api from "~/lib/axios.config";
-import { AppErrors } from "~/lib/errors";
+import { AppErrors, BaseSchemaError } from "~/lib/errors";
 import { SearchPlantSchema } from "~/schemas/plant.schema";
+
+export class PlantErrors<T> extends BaseSchemaError<T> {
+  name = "PlantErrors";
+
+  static readonly PlantAlreadyInCollection: ErrorObject = {
+    code: "PLANT_ALREADY_IN_COLLECTION",
+    message: "Cây này đã có trong bộ sưu tập của bạn",
+  };
+
+  static plantAlreadyInCollection() {
+    return new this(this.PlantAlreadyInCollection, {
+      nonFieldErrors: this.PlantAlreadyInCollection.message,
+    });
+  }
+}
 
 const searchByKeyword = async (schema: SearchPlantSchema) => {
   console.log("Search Plant by Keyword");
@@ -45,4 +60,82 @@ const searchByImage = async (formData: FormData) => {
   }
 };
 
-export { searchByKeyword, searchByImage };
+const getPlantById = async (id: string) => {
+  console.log("Get Plant by ID");
+
+  try {
+    const response = await api.request<Plant>({
+      url: `/plants/${id}`,
+      method: "get",
+    });
+
+    return response.data;
+  } catch (error) {
+    if (error instanceof AppErrors) throw error;
+  }
+};
+
+const addPlantToCollection = async (user: number, plant: number) => {
+  console.log("Add Plant to Collection");
+
+  try {
+    const response = await api.request<UserPlants>({
+      url: "/plants/user/plants/",
+      method: "post",
+      data: { user, plant },
+    });
+
+    return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      if (error.response?.status === 400) {
+        if (
+          error.response.data?.non_field_errors &&
+          "unique" in error.response.data.non_field_errors
+        )
+          throw PlantErrors.plantAlreadyInCollection();
+      }
+    }
+
+    if (error instanceof AppErrors) throw error;
+  }
+};
+
+const getUserPlants = async () => {
+  console.log("Get User Plants");
+
+  try {
+    const response = await api.request<UserPlants[]>({
+      url: "/plants/user/plants/",
+      method: "get",
+    });
+
+    return response.data;
+  } catch (error) {
+    if (error instanceof AppErrors) throw error;
+  }
+};
+
+const deleteUserPlant = async (id: number) => {
+  console.log("Delete User Plant");
+
+  try {
+    await api.request({
+      url: `/plants/user/plants/${id}/`,
+      method: "delete",
+    });
+
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
+
+export {
+  searchByKeyword,
+  searchByImage,
+  getPlantById,
+  addPlantToCollection,
+  getUserPlants,
+  deleteUserPlant,
+};

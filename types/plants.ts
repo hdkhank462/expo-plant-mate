@@ -5,7 +5,14 @@ type SearchResponse<T> = {
   results: T[];
 };
 
+type UserPlants = {
+  id: number;
+  user: number;
+  plant: number;
+};
+
 type Plant = {
+  id: number;
   identifier: string;
   name: string;
   scientific_name: string;

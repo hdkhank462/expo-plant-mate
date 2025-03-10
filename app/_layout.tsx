@@ -99,6 +99,10 @@ export default function RootLayout() {
             name="search/[query]"
             options={{ headerShown: false }}
           />
+          <Stack.Screen
+            name="plants/[id]"
+            options={{ title: "Chi tiết cây", headerTitleAlign: "center" }}
+          />
           <Stack.Screen name="+not-found" options={{ headerShown: false }} />
         </Stack>
       </PopupProvider>
