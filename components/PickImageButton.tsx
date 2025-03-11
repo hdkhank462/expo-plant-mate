@@ -9,9 +9,9 @@ const PickImageButton = ({
 }: ButtonProps & {
   handleOnPress?: (image: ImagePicker.ImagePickerAsset) => void;
 }) => {
-  const [image, setImage] = React.useState<ImagePicker.ImagePickerAsset | null>(
-    null
-  );
+  // const [image, setImage] = React.useState<ImagePicker.ImagePickerAsset | null>(
+  //   null
+  // );
 
   const pickImage = async () => {
     try {
@@ -22,7 +22,8 @@ const PickImageButton = ({
         quality: 1,
       });
       if (!result.canceled) {
-        setImage(result.assets[0]);
+        // setImage(result.assets[0]);
+        return result.assets[0];
       }
     } catch (error) {
       console.error(error);
@@ -30,9 +31,9 @@ const PickImageButton = ({
   };
 
   const onPress = async () => {
-    await pickImage();
-    console.log("Picked image:", JSON.stringify(image, null, 2));
-    if (handleOnPress && image) handleOnPress(image);
+    const imagePicked = await pickImage();
+    console.log("Picked image:", JSON.stringify(imagePicked, null, 2));
+    if (handleOnPress && imagePicked) handleOnPress(imagePicked);
   };
 
   return (

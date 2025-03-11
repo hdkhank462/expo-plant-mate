@@ -31,26 +31,26 @@ const ProfileScreen = () => {
 
   return (
     <SafeAreaView className="h-full bg-secondary/30">
-      <ScrollView
-        ref={scrollRef}
-        showsVerticalScrollIndicator={false}
-        contentContainerClassName="p-4"
-        refreshControl={
-          userInfo ? (
-            <Refresher
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              className="bg-secondary text-primary"
-            />
-          ) : undefined
-        }
-      >
-        {userInfo ? (
+      {userInfo ? (
+        <ScrollView
+          ref={scrollRef}
+          showsVerticalScrollIndicator={false}
+          contentContainerClassName="p-4"
+          refreshControl={
+            userInfo ? (
+              <Refresher
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                className="bg-secondary text-primary"
+              />
+            ) : undefined
+          }
+        >
           <ProfileView userInfo={userInfo} />
-        ) : (
-          <UnauthenticatedView />
-        )}
-      </ScrollView>
+        </ScrollView>
+      ) : (
+        <UnauthenticatedView />
+      )}
     </SafeAreaView>
   );
 };

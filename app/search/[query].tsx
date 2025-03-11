@@ -1,9 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ImagePickerAsset } from "expo-image-picker";
-import { Link, useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Image, SafeAreaView, ScrollView, View } from "react-native";
+import { SafeAreaView, ScrollView, View } from "react-native";
 import Toast from "react-native-toast-message";
 import {
   addPlantToCollection,
@@ -14,16 +14,13 @@ import {
   searchByKeyword,
 } from "~/api/plants";
 import PickImageButton from "~/components/PickImageButton";
+import PlantCard from "~/components/PlantCard";
 import Refresher from "~/components/Refresher";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardFooter } from "~/components/ui/card";
 import { Form, FormField, FormInput } from "~/components/ui/form";
 import { Text } from "~/components/ui/text";
 import { useGlobalStore } from "~/lib/global-store";
-import { Eye } from "~/lib/icons/Eye";
-import { Plus } from "~/lib/icons/Plus";
 import { Search } from "~/lib/icons/Search";
-import { Trash } from "~/lib/icons/Trash";
 import { catchErrorTyped } from "~/lib/utils";
 import { searchPlantSchema, SearchPlantSchema } from "~/schemas/plant.schema";
 
@@ -34,7 +31,7 @@ const SearchScreen = () => {
   const scrollRef = React.useRef<ScrollView>(null);
   const [refreshing, setRefreshing] = React.useState(false);
   const [searchResult, setSearchResult] = React.useState<Plant[]>([]);
-  const [userPlants, setUserPlants] = React.useState<UserPlants[]>([]);
+  const [userPlants, setUserPlants] = React.useState<UserPlantsDetail[]>([]);
   const userInfo = useGlobalStore((state) => state.userInfo);
 
   useEffect(() => {
@@ -195,91 +192,6 @@ const SearchScreen = () => {
         </View>
       </ScrollView>
     </SafeAreaView>
-  );
-};
-
-const PlantCard = ({
-  plant,
-  canSave,
-  userPlantId,
-  handleOnSave,
-  handleOnDelete,
-}: {
-  plant: Plant;
-  canSave?: boolean;
-  userPlantId?: number;
-  handleOnSave: (plantId: number) => Promise<void>;
-  handleOnDelete: (userPlantId: number) => Promise<void>;
-}) => {
-  return (
-    <Card>
-      <CardContent className="p-2">
-        <View className="flex-row items-center gap-2">
-          <View className="flex-auto rounded-md shadow-sm aspect-square">
-            <Image
-              source={{ uri: plant.image }}
-              className="w-full h-full rounded-md"
-            />
-          </View>
-          <View className="flex-auto h-full">
-            <View className="justify-between flex-1 gap-1">
-              <View>
-                <Text className="text-xs font-bold ">Tên</Text>
-                <Text className="text-xs text-muted-foreground">
-                  {plant.name}
-                </Text>
-              </View>
-              <View>
-                <Text className="text-xs font-bold ">Tên khoa học</Text>
-                <Text className="text-xs text-muted-foreground">
-                  {plant.scientific_name}
-                </Text>
-              </View>
-              <View>
-                <Text className="text-xs font-bold ">Họ</Text>
-                <Text className="text-xs text-muted-foreground">
-                  {plant.family}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      </CardContent>
-      <CardFooter className="px-2 pb-2">
-        <View className="flex-row items-center justify-end flex-1 gap-2">
-          <Link href={`/plants/${plant.id}`} asChild>
-            <Button
-              variant={"outline"}
-              size={"sm"}
-              className="flex-row items-center gap-2"
-            >
-              <Eye className="text-primary" size={20} />
-              <Text className="font-bold text-primary">Chi tiết</Text>
-            </Button>
-          </Link>
-          {canSave && userPlantId ? (
-            <Button
-              onPress={() => handleOnDelete(userPlantId)}
-              size={"sm"}
-              variant={"destructive"}
-              className="flex-row items-center gap-1"
-            >
-              <Trash className="text-primary-foreground" size={20} />
-              <Text className="font-bold text-primary-foreground">Bỏ lưu</Text>
-            </Button>
-          ) : (
-            <Button
-              onPress={() => handleOnSave(plant.id)}
-              size={"sm"}
-              className="flex-row items-center gap-1"
-            >
-              <Plus className="text-primary-foreground" size={20} />
-              <Text className="font-bold text-primary-foreground">Lưu</Text>
-            </Button>
-          )}
-        </View>
-      </CardFooter>
-    </Card>
   );
 };
 

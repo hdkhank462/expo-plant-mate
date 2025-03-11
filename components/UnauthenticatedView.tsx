@@ -23,7 +23,7 @@ const UnauthenticatedView = () => {
       </View>
 
       <Link href={"/(auth)/login"} asChild>
-        <Button className="shadow-sm shadow-foreground/5">
+        <Button size={"sm"} className="shadow-sm shadow-foreground/5">
           <Text className="font-bold">Đăng nhập để tiếp tục</Text>
         </Button>
       </Link>

@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router";
 import React from "react";
 import SearchButtonLink from "~/components/SearchButtonLink";
-import { Home } from "~/lib/icons/Home";
+import { Clock3 } from "~/lib/icons/Clock3";
 import { User } from "~/lib/icons/User";
 import { Leaf } from "~/lib/icons/Leaf";
 import TabsContainer from "~/components/TabsContainer";
@@ -23,28 +23,41 @@ const TabsLayout = () => {
         headerLeft: () => <SearchButtonLink />,
       }}
     >
-      <Tabs.Screen
-        name="index"
+      {/* <Tabs.Screen
+        name="plant-care-list"
         options={{
-          title: "Trang chủ",
+          title: "Lịch chăm sóc",
           tabBarIcon: ({ focused, color, size }) => (
             <Home
               size={size}
-              strokeWidth={focused ? 1.75 : 1.25}
               color={color}
+              strokeWidth={focused ? 1.75 : 1.25}
+            />
+          ),
+        }}
+      /> */}
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Cây của bạn",
+          tabBarIcon: ({ focused, color, size }) => (
+            <Leaf
+              size={size}
+              color={color}
+              strokeWidth={focused ? 1.75 : 1.25}
             />
           ),
         }}
       />
       <Tabs.Screen
-        name="plant-list"
+        name="plant-care"
         options={{
-          title: "Plant list",
+          title: "Lịch chăm sóc",
           tabBarIcon: ({ focused, color, size }) => (
-            <Leaf
+            <Clock3
               size={size}
-              strokeWidth={focused ? 1.75 : 1.25}
               color={color}
+              strokeWidth={focused ? 1.75 : 1.25}
             />
           ),
         }}
@@ -56,8 +69,8 @@ const TabsLayout = () => {
           tabBarIcon: ({ focused, color, size }) => (
             <User
               size={size}
-              strokeWidth={focused ? 1.75 : 1.25}
               color={color}
+              strokeWidth={focused ? 1.75 : 1.25}
             />
           ),
         }}

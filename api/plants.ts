@@ -64,7 +64,7 @@ const getPlantById = async (id: string) => {
   console.log("Get Plant by ID");
 
   try {
-    const response = await api.request<Plant>({
+    const response = await api.request<PlantDetail>({
       url: `/plants/${id}`,
       method: "get",
     });
@@ -79,7 +79,7 @@ const addPlantToCollection = async (user: number, plant: number) => {
   console.log("Add Plant to Collection");
 
   try {
-    const response = await api.request<UserPlants>({
+    const response = await api.request<UserPlantsDetail>({
       url: "/plants/user/plants/",
       method: "post",
       data: { user, plant },
@@ -105,7 +105,7 @@ const getUserPlants = async () => {
   console.log("Get User Plants");
 
   try {
-    const response = await api.request<UserPlants[]>({
+    const response = await api.request<UserPlantsDetail[]>({
       url: "/plants/user/plants/",
       method: "get",
     });
