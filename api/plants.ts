@@ -1,7 +1,8 @@
 import { AxiosError } from "axios";
+import Toast from "react-native-toast-message";
 import api from "~/lib/axios.config";
 import { AppErrors, BaseSchemaError } from "~/lib/errors";
-import { SearchPlantSchema } from "~/schemas/plant.schema";
+import { PlantCareSchema, SearchPlantSchema } from "~/schemas/plant.schema";
 
 export class PlantErrors<T> extends BaseSchemaError<T> {
   name = "PlantErrors";
@@ -131,6 +132,48 @@ const deleteUserPlant = async (id: number) => {
   }
 };
 
+const getUserPlantCares = async () => {
+  console.log("Get User Plant Cares");
+
+  try {
+    const response = await api.request<UserPlantCare[]>({
+      url: "/plants/user/plant-cares",
+      method: "get",
+    });
+
+    return response.data;
+  } catch (error) {
+    if (error instanceof AppErrors) throw error;
+  }
+};
+
+const createPlantCare = async (schema: PlantCareSchema) => {
+  console.log("Create Plant Care");
+
+  try {
+    const response = await api.request<UserPlantCare>({
+      url: "/plants/user/plant-cares/",
+      method: "post",
+      data: {
+        user_plant: parseInt(schema.userPlantId.value),
+        type: schema.type.value,
+        time: `${schema.time.getHours()}:${schema.time.getMinutes()}`,
+        repeat: schema.repeat,
+      },
+    });
+
+    Toast.show({
+      type: "success",
+      text1: "Thông báo",
+      text2: "Tạo lịch chăm sóc cây thành công",
+    });
+
+    return response.data;
+  } catch (error) {
+    if (error instanceof AppErrors) throw error;
+  }
+};
+
 export {
   searchByKeyword,
   searchByImage,
@@ -138,4 +181,6 @@ export {
   addPlantToCollection,
   getUserPlants,
   deleteUserPlant,
+  getUserPlantCares,
+  createPlantCare,
 };

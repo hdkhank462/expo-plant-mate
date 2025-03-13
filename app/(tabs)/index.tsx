@@ -32,10 +32,7 @@ const PlantListScreen = () => {
 
     if (userInfo) {
       const [errors, response] = await catchErrorTyped(getUserPlants(), []);
-      if (errors) {
-        console.error(errors);
-        return;
-      } else if (response) {
+      if (response) {
         setUserPlants(response);
       }
     }
@@ -107,7 +104,7 @@ const UserPlantsEmpty = () => {
       <View className="items-center justify-center w-full">
         <Text className="text-muted-foreground">Danh sách cây trống</Text>
         <Text className="text-muted-foreground">
-          Tìm kiếm và chọn cây hoặc thêm cây mới
+          Tìm kiếm và chọn cây để thêm vào bộ sưu tập
         </Text>
       </View>
 
@@ -121,11 +118,11 @@ const UserPlantsEmpty = () => {
             <Text className="font-bold">Tìm kiếm</Text>
           </Button>
         </Link>
-        <Link href={"/(auth)/login"} asChild>
+        {/* <Link href={"/(auth)/login"} asChild>
           <Button size={"sm"} className="shadow-sm shadow-foreground/5">
             <Text className="font-bold">Thêm mới</Text>
           </Button>
-        </Link>
+        </Link> */}
       </View>
     </View>
   );

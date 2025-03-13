@@ -26,6 +26,10 @@ import { Textarea } from "~/components/ui/textarea";
 import { cn } from "~/lib/utils";
 import { Eye } from "~/lib/icons/Eye";
 import { EyeOff } from "~/lib/icons/EyeOff";
+import { ToggleGroup, ToggleGroupItem } from "~/components/ui/toggle-group";
+import { VariantProps } from "class-variance-authority";
+import { toggleVariants } from "~/components/ui/toggle";
+import DatePicker from "react-native-date-picker";
 
 const Form = FormProvider;
 
@@ -421,6 +425,46 @@ const FormCheckbox = React.forwardRef<
 
 FormCheckbox.displayName = "FormCheckbox";
 
+const FormCheckboxGroup = React.forwardRef<
+  React.ElementRef<typeof ToggleGroup>,
+  Omit<FormItemProps<typeof ToggleGroup, string[]>, "onValueChange">
+>(({ label, description, value = [], onChange, ...props }, ref) => {
+  const {
+    error,
+    formItemNativeID,
+    formDescriptionNativeID,
+    formMessageNativeID,
+  } = useFormField();
+
+  return (
+    <FormItem className="gap-3">
+      <View>
+        {!!label && <FormLabel nativeID={formItemNativeID}>{label}</FormLabel>}
+        {!!description && (
+          <FormDescription className="pt-0">{description}</FormDescription>
+        )}
+      </View>
+      <ToggleGroup
+        ref={ref}
+        {...props}
+        type="multiple"
+        value={value}
+        onValueChange={onChange}
+        aria-labelledby={formItemNativeID}
+        aria-describedby={
+          !error
+            ? `${formDescriptionNativeID}`
+            : `${formDescriptionNativeID} ${formMessageNativeID}`
+        }
+        aria-invalid={!!error}
+      />
+      <FormMessage />
+    </FormItem>
+  );
+});
+
+FormCheckboxGroup.displayName = "FormCheckboxGroup";
+
 const FormRadioGroup = React.forwardRef<
   React.ElementRef<typeof RadioGroup>,
   Omit<FormItemProps<typeof RadioGroup, string>, "onValueChange">
@@ -582,10 +626,59 @@ const FormSwitch = React.forwardRef<
 
 FormSwitch.displayName = "FormSwitch";
 
+const FormDatePicker = React.forwardRef<
+  React.ElementRef<typeof DatePicker>,
+  FormItemProps<typeof DatePicker, Date>
+>(
+  (
+    {
+      label,
+      description,
+      value,
+      onChange,
+      mode = "date",
+      minimumDate,
+      maximumDate,
+      ...props
+    },
+    ref
+  ) => {
+    const {
+      error,
+      formItemNativeID,
+      formDescriptionNativeID,
+      formMessageNativeID,
+    } = useFormField();
+
+    return (
+      <FormItem>
+        {!!label && <FormLabel nativeID={formItemNativeID}>{label}</FormLabel>}
+        {!!description && <FormDescription>{description}</FormDescription>}
+        <View className="items-center">
+          <DatePicker
+            ref={ref}
+            {...props}
+            date={value || new Date()}
+            mode={mode}
+            minimumDate={minimumDate}
+            maximumDate={maximumDate}
+            onDateChange={onChange}
+          />
+        </View>
+        <FormMessage />
+      </FormItem>
+    );
+  }
+);
+
+FormDatePicker.displayName = "FormDatePicker";
+
 export {
   Form,
   FormCheckbox,
+  FormCheckboxGroup,
   FormDescription,
+  FormDatePicker,
   FormField,
   FormInput,
   FormItem,

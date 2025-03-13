@@ -27,3 +27,21 @@ export const STORAGE_KEYS = {
   USER_INFO: "userInfo",
   COLOR_SCHEME: "colorScheme",
 };
+
+export const WEEKDAYS = [
+  { value: "mon", label: "T2" },
+  { value: "tue", label: "T3" },
+  { value: "wed", label: "T4" },
+  { value: "thu", label: "T5" },
+  { value: "fri", label: "T6" },
+  { value: "sat", label: "T7" },
+  { value: "sun", label: "CN" },
+];
+
+export const CARE_TYPES = [
+  { value: "water", label: "Tưới nước" },
+  { value: "fertilize", label: "Bón phân" },
+  { value: "repot", label: "Chuyển chậu" },
+  { value: "prune", label: "Tỉa cành" },
+  { value: "clean", label: "Vệ sinh" },
+];

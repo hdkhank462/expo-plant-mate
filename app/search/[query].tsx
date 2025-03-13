@@ -216,7 +216,7 @@ const SearchForm = ({
         name="search"
         render={({ field }) => (
           <FormInput
-            placeholder="Tìm kiếm"
+            placeholder="Tìm kiếm cây"
             required
             {...field}
             iconEnd={

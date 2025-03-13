@@ -28,3 +28,19 @@ type UserPlants = {
 type UserPlantsDetail = UserPlants & {
   plant_detail: Plant;
 };
+
+type CareType = "water" | "fertilize" | "repot" | "prune" | "clean";
+type WeekDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+
+type UserPlantCare = {
+  id: number;
+  user_plant: number;
+  user_plant_detail: UserPlantsDetail;
+  type: CareType;
+  time: string;
+  repeat: WeekDay[];
+};
+
+type UserPlantCareLocal = UserPlantCare & {
+  enabled?: boolean;
+};
