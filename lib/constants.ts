@@ -19,7 +19,7 @@ export const NAV_THEME = {
 
 export const DEFAULT: AppDefault = {
   APP_THEME: "light",
-  BASE_API_URL: "http://192.168.1.6:8000/api",
+  BASE_API_URL: "http://192.168.1.5:8000/api",
 };
 
 export const STORAGE_KEYS = {

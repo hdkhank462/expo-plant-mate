@@ -11,14 +11,14 @@ const PlantCard = ({
   plant,
   canSave,
   userPlantId,
-  handleOnSave,
-  handleOnDelete,
+  onSave,
+  onUnsave,
 }: {
   plant: Plant;
   canSave?: boolean;
   userPlantId?: number;
-  handleOnSave?: (plantId: number) => Promise<void>;
-  handleOnDelete: (userPlantId: number) => Promise<void>;
+  onSave?: (plantId: number) => Promise<void>;
+  onUnsave: (userPlantId: number) => Promise<void>;
 }) => {
   return (
     <Card>
@@ -66,28 +66,32 @@ const PlantCard = ({
               <Text className="font-bold text-primary">Chi tiết</Text>
             </Button>
           </Link>
-          {canSave && userPlantId ? (
-            <Button
-              onPress={() => handleOnDelete(userPlantId)}
-              size={"sm"}
-              variant={"destructive"}
-              className="flex-row items-center gap-1"
-            >
-              <Trash className="text-primary-foreground" size={20} />
-              <Text className="font-bold text-primary-foreground">Bỏ lưu</Text>
-            </Button>
-          ) : (
-            <Button
-              onPress={() => {
-                if (handleOnSave) handleOnSave(plant.id);
-              }}
-              size={"sm"}
-              className="flex-row items-center gap-1"
-            >
-              <Plus className="text-primary-foreground" size={20} />
-              <Text className="font-bold text-primary-foreground">Lưu</Text>
-            </Button>
-          )}
+          {canSave ? (
+            userPlantId ? (
+              <Button
+                onPress={() => onUnsave(userPlantId)}
+                size={"sm"}
+                variant={"destructive"}
+                className="flex-row items-center gap-1"
+              >
+                <Trash className="text-primary-foreground" size={20} />
+                <Text className="font-bold text-primary-foreground">
+                  Bỏ lưu
+                </Text>
+              </Button>
+            ) : (
+              <Button
+                onPress={() => {
+                  if (onSave) onSave(plant.id);
+                }}
+                size={"sm"}
+                className="flex-row items-center gap-1"
+              >
+                <Plus className="text-primary-foreground" size={20} />
+                <Text className="font-bold text-primary-foreground">Lưu</Text>
+              </Button>
+            )
+          ) : null}
         </View>
       </CardFooter>
     </Card>

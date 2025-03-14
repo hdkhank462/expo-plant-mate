@@ -19,7 +19,7 @@ export class PlantErrors<T> extends BaseSchemaError<T> {
   }
 }
 
-const searchByKeyword = async (schema: SearchPlantSchema) => {
+const searchPlantByKeyword = async (schema: SearchPlantSchema) => {
   console.log("Search Plant by Keyword");
 
   try {
@@ -39,7 +39,7 @@ const searchByKeyword = async (schema: SearchPlantSchema) => {
   }
 };
 
-const searchByImage = async (formData: FormData) => {
+const searchPlantByImage = async (formData: FormData) => {
   console.log("Search Plant by Image");
 
   try {
@@ -76,7 +76,7 @@ const getPlantById = async (id: string) => {
   }
 };
 
-const addPlantToCollection = async (user: number, plant: number) => {
+const savePlant = async (user: number, plant: number) => {
   console.log("Add Plant to Collection");
 
   try {
@@ -117,7 +117,7 @@ const getUserPlants = async () => {
   }
 };
 
-const deleteUserPlant = async (id: number) => {
+const unSavePlant = async (id: number) => {
   console.log("Delete User Plant");
 
   try {
@@ -132,7 +132,7 @@ const deleteUserPlant = async (id: number) => {
   }
 };
 
-const getUserPlantCares = async () => {
+const getPlantCares = async () => {
   console.log("Get User Plant Cares");
 
   try {
@@ -174,13 +174,57 @@ const createPlantCare = async (schema: PlantCareSchema) => {
   }
 };
 
+const getPlantCareById = async (id: string) => {
+  console.log("Get Plant Care by ID");
+
+  try {
+    const response = await api.request<UserPlantCare>({
+      url: `/plants/user/plant-cares/${id}/`,
+      method: "get",
+    });
+
+    return response.data;
+  } catch (error) {
+    if (error instanceof AppErrors) throw error;
+  }
+};
+
+const updatePlantCare = async (id: string, schema: PlantCareSchema) => {
+  console.log("Update Plant Care");
+
+  try {
+    const response = await api.request<UserPlantCare>({
+      url: `/plants/user/plant-cares/${id}/`,
+      method: "put",
+      data: {
+        user_plant: parseInt(schema.userPlantId.value),
+        type: schema.type.value,
+        time: `${schema.time.getHours()}:${schema.time.getMinutes()}`,
+        repeat: schema.repeat,
+      },
+    });
+
+    Toast.show({
+      type: "success",
+      text1: "Thông báo",
+      text2: "Cập nhật lịch chăm sóc cây thành công",
+    });
+
+    return response.data;
+  } catch (error) {
+    if (error instanceof AppErrors) throw error;
+  }
+};
+
 export {
-  searchByKeyword,
-  searchByImage,
+  searchPlantByKeyword,
+  searchPlantByImage,
   getPlantById,
-  addPlantToCollection,
+  savePlant,
   getUserPlants,
-  deleteUserPlant,
-  getUserPlantCares,
+  unSavePlant,
+  getPlantCares,
   createPlantCare,
+  getPlantCareById,
+  updatePlantCare,
 };

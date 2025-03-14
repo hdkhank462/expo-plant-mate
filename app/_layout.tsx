@@ -110,6 +110,13 @@ export default function RootLayout() {
               headerTitleAlign: "center",
             }}
           />
+          <Stack.Screen
+            name="plant-cares/[id]"
+            options={{
+              title: "Chi tiết lịch chăm sóc",
+              headerTitleAlign: "center",
+            }}
+          />
           <Stack.Screen name="+not-found" options={{ headerShown: false }} />
         </Stack>
       </PopupProvider>

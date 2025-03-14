@@ -6,12 +6,12 @@ import { useForm } from "react-hook-form";
 import { SafeAreaView, ScrollView, View } from "react-native";
 import Toast from "react-native-toast-message";
 import {
-  addPlantToCollection,
-  deleteUserPlant,
+  savePlant,
+  unSavePlant,
   getUserPlants,
   PlantErrors,
-  searchByImage,
-  searchByKeyword,
+  searchPlantByImage,
+  searchPlantByKeyword,
 } from "~/api/plants";
 import PickImageButton from "~/components/PickImageButton";
 import PlantCard from "~/components/PlantCard";
@@ -49,7 +49,7 @@ const SearchScreen = () => {
     useGlobalStore.setState({ isAppLoading: true });
 
     const [errors, response] = await catchErrorTyped(
-      searchByImage(formData),
+      searchPlantByImage(formData),
       []
     );
 
@@ -79,7 +79,7 @@ const SearchScreen = () => {
     useGlobalStore.setState({ isAppLoading: true });
 
     const [errors, response] = await catchErrorTyped(
-      searchByKeyword({ search: query }),
+      searchPlantByKeyword({ search: query }),
       []
     );
     if (errors) {
@@ -108,7 +108,7 @@ const SearchScreen = () => {
     useGlobalStore.setState({ isAppLoading: true });
 
     const [errors, response] = await catchErrorTyped(
-      addPlantToCollection(userInfo.pk, plantId),
+      savePlant(userInfo.pk, plantId),
       [PlantErrors]
     );
 
@@ -129,11 +129,11 @@ const SearchScreen = () => {
     useGlobalStore.setState({ isAppLoading: false });
   };
 
-  const handleOnDelete = async (userPlantId: number) => {
+  const handleOnUnsave = async (userPlantId: number) => {
     useGlobalStore.setState({ isAppLoading: true });
 
     const [errors, isSuccess] = await catchErrorTyped(
-      deleteUserPlant(userPlantId),
+      unSavePlant(userPlantId),
       []
     );
 
@@ -180,12 +180,12 @@ const SearchScreen = () => {
           <View className="gap-4">
             {searchResult.map((plant) => (
               <PlantCard
-                key={plant.identifier}
+                key={plant.id}
                 plant={plant}
                 canSave={!!userInfo}
                 userPlantId={userPlants.find((up) => up.plant === plant.id)?.id}
-                handleOnSave={handleOnSave}
-                handleOnDelete={handleOnDelete}
+                onSave={handleOnSave}
+                onUnsave={handleOnUnsave}
               />
             ))}
           </View>

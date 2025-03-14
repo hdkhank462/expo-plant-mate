@@ -1,14 +1,14 @@
-import { Link, useNavigation } from "expo-router";
+import { Link, useNavigation, useRouter } from "expo-router";
 import React from "react";
 import { SafeAreaView, ScrollView, View } from "react-native";
-import { getUserPlantCares } from "~/api/plants";
+import { getPlantCares } from "~/api/plants";
 import Refresher from "~/components/Refresher";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Switch } from "~/components/ui/switch";
 import { Text } from "~/components/ui/text";
 import UnauthenticatedView from "~/components/UnauthenticatedView";
-import { WEEKDAYS } from "~/lib/constants";
+import { CARE_TYPES, WEEKDAYS } from "~/lib/constants";
 import { useGlobalStore } from "~/lib/global-store";
 import { Plus } from "~/lib/icons/Plus";
 import { Leaf } from "~/lib/icons/Leaf";
@@ -20,7 +20,7 @@ const PlantCareScreen = () => {
   const navigation = useNavigation();
   const userInfo = useGlobalStore((state) => state.userInfo);
   const [refreshing, setRefreshing] = React.useState(false);
-  const [plantCares, setPlantCares] = React.useState<UserPlantCare[]>([]);
+  const [plantCares, setPlantCares] = React.useState<UserPlantCare[]>();
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -49,7 +49,7 @@ const PlantCareScreen = () => {
 
     useGlobalStore.setState({ isAppLoading: true });
 
-    const [errors, response] = await catchErrorTyped(getUserPlantCares(), []);
+    const [errors, response] = await catchErrorTyped(getPlantCares(), []);
 
     if (response) {
       setPlantCares(response);
@@ -57,6 +57,8 @@ const PlantCareScreen = () => {
 
     useGlobalStore.setState({ isAppLoading: false });
   };
+
+  if (!plantCares) return null;
 
   return (
     <SafeAreaView className="h-full p-4 bg-secondary/30">
@@ -91,6 +93,7 @@ const PlantCareScreen = () => {
 };
 
 const PlantCareCard = ({ plantCare }: { plantCare: UserPlantCareLocal }) => {
+  const router = useRouter();
   const [isEnabled, setIsEnabled] = React.useState(plantCare.enabled || false);
 
   const repeat =
@@ -121,7 +124,7 @@ const PlantCareCard = ({ plantCare }: { plantCare: UserPlantCareLocal }) => {
               variant={"ghost"}
               className="absolute top-0 left-0 w-full !h-full z-50 !bg-transparent"
               onPress={() => {
-                // TODO: Navigate to plant detail
+                router.push(`/plant-cares/${plantCare.id}`);
               }}
             />
             <Text className="text-4xl font-bold">{plantCare.time}</Text>
@@ -131,7 +134,14 @@ const PlantCareCard = ({ plantCare }: { plantCare: UserPlantCareLocal }) => {
                 size={16}
                 strokeWidth={1.5}
               />
-              <Text className="text-sm text-card-foreground">{repeat}</Text>
+              <Text className="text-sm text-card-foreground">
+                {repeat}
+                {" • "}
+                {
+                  CARE_TYPES.filter((type) => type.value == plantCare.type)[0]
+                    .label
+                }
+              </Text>
             </View>
             <View className="flex-row items-center gap-1">
               <Leaf

@@ -9,20 +9,15 @@ const PickImageButton = ({
 }: ButtonProps & {
   handleOnPress?: (image: ImagePicker.ImagePickerAsset) => void;
 }) => {
-  // const [image, setImage] = React.useState<ImagePicker.ImagePickerAsset | null>(
-  //   null
-  // );
-
   const pickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         allowsEditing: true,
-        aspect: [4, 3],
+        // aspect: [4, 3],
         quality: 1,
       });
       if (!result.canceled) {
-        // setImage(result.assets[0]);
         return result.assets[0];
       }
     } catch (error) {

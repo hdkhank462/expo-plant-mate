@@ -2,7 +2,7 @@ import { Link, useRouter } from "expo-router";
 import React from "react";
 import { SafeAreaView, ScrollView, View } from "react-native";
 import Toast from "react-native-toast-message";
-import { deleteUserPlant, getUserPlants } from "~/api/plants";
+import { unSavePlant, getUserPlants } from "~/api/plants";
 import PlantCard from "~/components/PlantCard";
 import Refresher from "~/components/Refresher";
 import { Button } from "~/components/ui/button";
@@ -15,7 +15,7 @@ const PlantListScreen = () => {
   const scrollRef = React.useRef<ScrollView>(null);
   const userInfo = useGlobalStore((state) => state.userInfo);
   const [refreshing, setRefreshing] = React.useState(false);
-  const [userPlants, setUserPlants] = React.useState<UserPlantsDetail[]>([]);
+  const [userPlants, setUserPlants] = React.useState<UserPlantsDetail[]>();
 
   React.useEffect(() => {
     refetch();
@@ -40,16 +40,16 @@ const PlantListScreen = () => {
     useGlobalStore.setState({ isAppLoading: false });
   };
 
-  const handleOnDelete = async (userPlantId: number) => {
+  const handleOnUnsave = async (userPlantId: number) => {
     useGlobalStore.setState({ isAppLoading: true });
 
     const [errors, isSuccess] = await catchErrorTyped(
-      deleteUserPlant(userPlantId),
+      unSavePlant(userPlantId),
       []
     );
 
     if (isSuccess) {
-      setUserPlants((prev) => prev.filter((up) => up.id !== userPlantId));
+      setUserPlants((prev) => prev?.filter((up) => up.id !== userPlantId));
       Toast.show({
         type: "success",
         text1: "Thông báo",
@@ -59,6 +59,8 @@ const PlantListScreen = () => {
 
     useGlobalStore.setState({ isAppLoading: false });
   };
+
+  if (!userPlants) return null;
 
   return (
     <SafeAreaView className="h-full p-4 bg-secondary/30">
@@ -79,11 +81,11 @@ const PlantListScreen = () => {
             <View className="gap-4">
               {userPlants.map((up) => (
                 <PlantCard
-                  key={up.plant_detail.identifier}
+                  key={up.plant_detail.id}
                   plant={up.plant_detail}
                   canSave={!!userInfo}
                   userPlantId={up.id}
-                  handleOnDelete={handleOnDelete}
+                  onUnsave={handleOnUnsave}
                 />
               ))}
             </View>
