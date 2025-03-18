@@ -216,6 +216,21 @@ const updatePlantCare = async (id: string, schema: PlantCareSchema) => {
   }
 };
 
+const deletePlantCare = async (id: string) => {
+  console.log("Delete Plant Care");
+
+  try {
+    await api.request({
+      url: `/plants/user/plant-cares/${id}/`,
+      method: "delete",
+    });
+
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
+
 export {
   searchPlantByKeyword,
   searchPlantByImage,
@@ -227,4 +242,5 @@ export {
   createPlantCare,
   getPlantCareById,
   updatePlantCare,
+  deletePlantCare,
 };

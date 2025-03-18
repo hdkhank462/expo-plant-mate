@@ -3,7 +3,11 @@ import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { SafeAreaView, ScrollView, View } from "react-native";
-import { getPlantCareById, updatePlantCare } from "~/api/plants";
+import {
+  deletePlantCare,
+  getPlantCareById,
+  updatePlantCare,
+} from "~/api/plants";
 import PlantCareForm from "~/components/PlantCareForm";
 import { Button } from "~/components/ui/button";
 import { CARE_TYPES } from "~/constants/values";
@@ -90,10 +94,10 @@ const UpdatePlantCareScreen = () => {
     useStore.setState({ isAppLoading: false });
 
     if (response) {
-      const notifications = await findNotificationsById(response.id.toString());
+      const notifications = await findNotificationsById(id);
 
       if (notifications.length > 0) {
-        await cancelNotificationsById(response.id.toString());
+        await cancelNotificationsById(id);
       }
 
       await scheduleWeeklyNotification(response);
@@ -102,23 +106,47 @@ const UpdatePlantCareScreen = () => {
     }
   };
 
+  const handleDeletePlantCare = async () => {
+    if (typeof id !== "string" || id === "[id]") return;
+
+    useStore.setState({ isAppLoading: true });
+
+    const [errors, response] = await catchErrorTyped(deletePlantCare(id), []);
+
+    useStore.setState({ isAppLoading: false });
+
+    if (response) {
+      const notifications = await findNotificationsById(id);
+
+      if (notifications.length > 0) {
+        await cancelNotificationsById(id);
+      }
+      router.replace("/(tabs)/plant-care");
+    }
+  };
+
   if (!plantCare) return null;
 
   return (
-    <SafeAreaView className="h-full p-4 bg-secondary/30">
-      <ScrollView
-        ref={scrollRef}
-        showsVerticalScrollIndicator={false}
-        contentContainerClassName="min-h-full"
-      >
+    <SafeAreaView className="p-4 bg-secondary/30">
+      <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false}>
         <View className="gap-4">
           <PlantCareForm form={form} />
-          <Button
-            onPress={form.handleSubmit(onSubmit)}
-            className="shadow-sm shadow-foreground/5"
-          >
-            <Text className="font-bold">Lưu</Text>
-          </Button>
+          <View className="flex-row gap-4">
+            <Button
+              onPress={handleDeletePlantCare}
+              variant={"outline"}
+              className="flex-1 shadow-sm shadow-foreground/5 border-destructive"
+            >
+              <Text className="font-bold text-destructive">Xoá</Text>
+            </Button>
+            <Button
+              onPress={form.handleSubmit(onSubmit)}
+              className="flex-1 shadow-sm shadow-foreground/5"
+            >
+              <Text className="font-bold">Lưu</Text>
+            </Button>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
