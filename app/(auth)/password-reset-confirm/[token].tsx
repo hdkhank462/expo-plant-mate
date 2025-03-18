@@ -13,7 +13,7 @@ import {
   resetPasswordConfirmSchema,
   ResetSetPasswordConfirmSchema,
 } from "~/schemas/account.schema";
-import { useGlobalStore } from "~/lib/global-store";
+import { useStore } from "~/stores/index";
 import { catchErrorTyped } from "~/lib/utils";
 import { loginWithCreds } from "~/api/auth";
 import { AccountErrors, resetPasswordConfirm } from "~/api/account";
@@ -68,7 +68,7 @@ const ResetPasswordConfirmForm = () => {
     console.log("Submit values:", values);
     const schema = resetPasswordConfirmSchema.parse(values);
 
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     const [error] = await catchErrorTyped(resetPasswordConfirm(schema), [
       AccountErrors<ChangePasswordSchema>,
@@ -96,7 +96,7 @@ const ResetPasswordConfirmForm = () => {
       router.replace("/(auth)/login");
     }
 
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
   };
 
   return (

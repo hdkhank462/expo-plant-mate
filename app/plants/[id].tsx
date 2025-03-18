@@ -5,7 +5,7 @@ import WebView from "react-native-webview";
 import { getPlantById } from "~/api/plants";
 import { Text } from "~/components/ui/text";
 import WebViewStyled from "~/components/WebViewStyled";
-import { useGlobalStore } from "~/lib/global-store";
+import { useStore } from "~/stores/index";
 
 const PlantDetail = () => {
   const scrollRef = React.useRef<ScrollView>(null);
@@ -17,9 +17,9 @@ const PlantDetail = () => {
     const fetchPlant = async () => {
       if (typeof id !== "string" || id === "[id]") return;
 
-      useGlobalStore.setState({ isAppLoading: true });
+      useStore.setState({ isAppLoading: true });
       const plant = await getPlantById(id);
-      useGlobalStore.setState({ isAppLoading: false });
+      useStore.setState({ isAppLoading: false });
 
       if (!plant) {
         navigation.goBack();

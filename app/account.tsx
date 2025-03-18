@@ -12,7 +12,7 @@ import { Button } from "~/components/ui/button";
 import { Form, FormField, FormInput } from "~/components/ui/form";
 import { Text } from "~/components/ui/text";
 import { AppErrors } from "~/lib/errors";
-import { useGlobalStore } from "~/lib/global-store";
+import { useStore } from "~/stores/index";
 import { catchErrorTyped } from "~/lib/utils";
 import {
   changePasswordSchema,
@@ -30,7 +30,7 @@ const AccountSettingsScreen = () => {
 
   useEffect(() => {
     const init = async () => {
-      useGlobalStore.setState({ isAppLoading: true });
+      useStore.setState({ isAppLoading: true });
 
       const [error, response] = await catchErrorTyped(getUserInfo(), [
         AppErrors,
@@ -42,7 +42,7 @@ const AccountSettingsScreen = () => {
         setUserInfo(response);
       }
 
-      useGlobalStore.setState({ isAppLoading: false });
+      useStore.setState({ isAppLoading: false });
     };
     init();
   }, []);
@@ -86,7 +86,7 @@ const ChangePasswordForm = () => {
     console.log("Submit values:", values);
     const schema = changePasswordSchema.parse(values);
 
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     const [error] = await catchErrorTyped(changePassword(schema), [
       AccountErrors<ChangePasswordSchema>,
@@ -119,7 +119,7 @@ const ChangePasswordForm = () => {
       }
     }
 
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
   };
 
   return (
@@ -176,7 +176,7 @@ const UpdateAccountForm = ({ userInfo, ...props }: { userInfo: UserInfo }) => {
     console.log("Submit values:", values);
     const schema = updateAccountSchema.parse(values);
 
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     const [error] = await catchErrorTyped(updateAccount(schema), [
       AccountErrors,
@@ -190,7 +190,7 @@ const UpdateAccountForm = ({ userInfo, ...props }: { userInfo: UserInfo }) => {
       }
     }
 
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
   };
 
   return (

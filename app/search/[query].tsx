@@ -19,7 +19,7 @@ import Refresher from "~/components/Refresher";
 import { Button } from "~/components/ui/button";
 import { Form, FormField, FormInput } from "~/components/ui/form";
 import { Text } from "~/components/ui/text";
-import { useGlobalStore } from "~/lib/global-store";
+import { useStore } from "~/stores/index";
 import { Search } from "~/lib/icons/Search";
 import { catchErrorTyped } from "~/lib/utils";
 import { searchPlantSchema, SearchPlantSchema } from "~/schemas/plant.schema";
@@ -32,7 +32,7 @@ const SearchScreen = () => {
   const [refreshing, setRefreshing] = React.useState(false);
   const [searchResult, setSearchResult] = React.useState<Plant[]>([]);
   const [userPlants, setUserPlants] = React.useState<UserPlantsDetail[]>([]);
-  const userInfo = useGlobalStore((state) => state.userInfo);
+  const userInfo = useStore((state) => state.userInfo);
 
   useEffect(() => {
     refetch(query);
@@ -46,7 +46,7 @@ const SearchScreen = () => {
       type: image.mimeType,
     } as any);
 
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     const [errors, response] = await catchErrorTyped(
       searchPlantByImage(formData),
@@ -56,7 +56,7 @@ const SearchScreen = () => {
     if (response) {
       setSearchResult(response.results);
     }
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
   };
 
   const onSearchByKeyword = (values: SearchPlantSchema) => {
@@ -76,7 +76,7 @@ const SearchScreen = () => {
     if (typeof query !== "string" || query === "[query]") return;
     console.log("Refetching", query);
 
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     const [errors, response] = await catchErrorTyped(
       searchPlantByKeyword({ search: query }),
@@ -99,13 +99,13 @@ const SearchScreen = () => {
       }
     }
 
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
   };
 
   const handleOnSave = async (plantId: number) => {
     if (!userInfo) return;
 
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     const [errors, response] = await catchErrorTyped(
       savePlant(userInfo.pk, plantId),
@@ -126,11 +126,11 @@ const SearchScreen = () => {
         text2: "Đã lưu cây vào bộ sưu tập",
       });
     }
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
   };
 
   const handleOnUnsave = async (userPlantId: number) => {
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     const [errors, isSuccess] = await catchErrorTyped(
       unSavePlant(userPlantId),
@@ -146,7 +146,7 @@ const SearchScreen = () => {
       });
     }
 
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
   };
 
   return (

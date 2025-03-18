@@ -1,12 +1,12 @@
-import { Pressable, View } from "react-native";
+import { useState } from "react";
+import { View } from "react-native";
+import { Switch } from "~/components/ui/switch";
 import { setAndroidNavigationBar } from "~/lib/android-navigation-bar";
 import { MoonStar } from "~/lib/icons/MoonStar";
 import { Sun } from "~/lib/icons/Sun";
 import { useColorScheme } from "~/lib/useColorScheme";
 import { cn } from "~/lib/utils";
 import { Button } from "./ui/button";
-import { Switch } from "~/components/ui/switch";
-import { useState } from "react";
 
 export function ThemeToggle({
   swtich,

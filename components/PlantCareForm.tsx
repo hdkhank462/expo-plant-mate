@@ -18,8 +18,8 @@ import {
 } from "~/components/ui/select";
 import { Text } from "~/components/ui/text";
 import { ToggleGroupItem } from "~/components/ui/toggle-group";
-import { CARE_TYPES, WEEKDAYS } from "~/lib/constants";
-import { useGlobalStore } from "~/lib/global-store";
+import { CARE_TYPES, WEEKDAYS } from "~/constants/values";
+import { useStore } from "~/stores/index";
 import { catchErrorTyped } from "~/lib/utils";
 import { PlantCareSchema } from "~/schemas/plant.schema";
 
@@ -28,14 +28,14 @@ const PlantCareForm = ({
 }: {
   form: UseFormReturn<PlantCareSchema, any, undefined>;
 }) => {
-  const userInfo = useGlobalStore((state) => state.userInfo);
+  const userInfo = useStore((state) => state.userInfo);
   const [userPlants, setUserPlants] = React.useState<TSelectValue[]>([]);
   const [selectTriggerWidth, setSelectTriggerWidth] = React.useState(0);
 
   React.useLayoutEffect(() => {
     const getUserPlantCare = async () => {
       if (!userInfo) return;
-      useGlobalStore.setState({ isAppLoading: true });
+      useStore.setState({ isAppLoading: true });
 
       const [errors, response] = await catchErrorTyped(getUserPlants(), []);
       if (response) {
@@ -46,7 +46,7 @@ const PlantCareForm = ({
         setUserPlants(temp);
       }
 
-      useGlobalStore.setState({ isAppLoading: false });
+      useStore.setState({ isAppLoading: false });
     };
 
     getUserPlantCare();

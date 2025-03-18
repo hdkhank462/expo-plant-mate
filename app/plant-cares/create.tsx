@@ -7,8 +7,8 @@ import { createPlantCare, getUserPlants } from "~/api/plants";
 import PlantCareForm from "~/components/PlantCareForm";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
-import { CARE_TYPES } from "~/lib/constants";
-import { useGlobalStore } from "~/lib/global-store";
+import { CARE_TYPES } from "~/constants/values";
+import { useStore } from "~/stores/index";
 import { catchErrorTyped } from "~/lib/utils";
 import { plantCareSchema, PlantCareSchema } from "~/schemas/plant.schema";
 
@@ -31,14 +31,14 @@ const CreatePlantCareScreen = () => {
     console.log("Submit values:", JSON.stringify(values, null, 2));
     const schema = plantCareSchema.parse(values);
 
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     const [errors, response] = await catchErrorTyped(
       createPlantCare(schema),
       []
     );
 
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
 
     if (response) {
       router.replace("/(tabs)/plant-care");

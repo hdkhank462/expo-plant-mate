@@ -11,14 +11,14 @@ import { SplashScreen, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import { Platform } from "react-native";
-// import SplashScreen from "~/app/splash";
-import { PopupProvider } from "~/components/PopupProvider";
 import LoadingOverlay from "~/components/LoadingOverlay";
+import { PopupProvider } from "~/components/PopupProvider";
 import { ToastProvider } from "~/components/ui/toast";
 import { NAV_THEME } from "~/lib/constants";
-import { useGlobalStore } from "~/lib/global-store";
+import { useStore } from "~/stores/index";
 import { useColorScheme } from "~/lib/useColorScheme";
-import { delay } from "~/lib/utils";
+import * as Notifications from "expo-notifications";
+import { useNofiications } from "~/hooks/useNofications";
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -36,14 +36,24 @@ export {
 
 SplashScreen.preventAutoHideAsync();
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
 export default function RootLayout() {
   const { colorScheme, isDarkColorScheme } = useColorScheme();
-  const initializeGlobalStore = useGlobalStore(
+  const initializeGlobalStore = useStore(
     (state) => state.initializeGlobalStore
   );
-  const isInitialized = useGlobalStore((state) => state.isInitialized);
-  const isAppLoading = useGlobalStore((state) => state.isAppLoading);
+  const isInitialized = useStore((state) => state.isInitialized);
+  const isAppLoading = useStore((state) => state.isAppLoading);
   const [isAppReady, setisAppReady] = useState(false);
+
+  const { channels, expoPushToken, notification } = useNofiications();
 
   useIsomorphicLayoutEffect(() => {
     const initializeRootLayout = async () => {
@@ -114,6 +124,13 @@ export default function RootLayout() {
             name="plant-cares/[id]"
             options={{
               title: "Chi tiết lịch chăm sóc",
+              headerTitleAlign: "center",
+            }}
+          />
+          <Stack.Screen
+            name="settings"
+            options={{
+              title: "Cài đặt",
               headerTitleAlign: "center",
             }}
           />

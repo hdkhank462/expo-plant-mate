@@ -1,25 +1,38 @@
-import { Link } from "expo-router";
+import { Link, useNavigation } from "expo-router";
 import React from "react";
 import { SafeAreaView, ScrollView, View } from "react-native";
 import { getUserInfo } from "~/api/auth";
 import CardWithTitle from "~/components/CardWithTitle";
-import ButtonWithIcon from "~/components/LogoutButton";
+import LogoutButton from "~/components/LogoutButton";
 import Refresher from "~/components/Refresher";
-import { ThemeToggle } from "~/components/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
 import UnauthenticatedView from "~/components/UnauthenticatedView";
-import { useGlobalStore } from "~/lib/global-store";
 import { CalendarClock } from "~/lib/icons/CalendarClock";
-import { MoonStar } from "~/lib/icons/MoonStar";
+import { ChevronRight } from "~/lib/icons/ChevronRight";
+import { Settings } from "~/lib/icons/Settings";
 import { User } from "~/lib/icons/User";
 import { catchErrorTyped } from "~/lib/utils";
+import { useStore } from "~/stores/index";
 
 const ProfileScreen = () => {
-  const userInfo = useGlobalStore((state) => state.userInfo);
+  const navigation = useNavigation();
+  const userInfo = useStore((state) => state.userInfo);
   const scrollRef = React.useRef<ScrollView>(null);
   const [refreshing, setRefreshing] = React.useState(false);
+
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Link href={"/settings"} asChild>
+          <Button variant={"ghost"} size={"icon"} className="mr-3">
+            <Settings className="text-foreground" size={24} strokeWidth={2} />
+          </Button>
+        </Link>
+      ),
+    });
+  }, [navigation]);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -84,26 +97,17 @@ const ProfileView = ({ userInfo }: { userInfo: UserInfo }) => {
           variant={"outline"}
           className="items-start shadow-sm shadow-foreground/5"
         >
-          <View className="flex-row items-center gap-4">
-            <User className="text-primary" size={16} strokeWidth={2} />
-            <Text className="font-bold">Tài khoản</Text>
+          <View className="flex-row items-center justify-between w-full">
+            <View className="flex-row items-center gap-4">
+              <User className="text-primary" size={16} strokeWidth={2} />
+              <Text className="font-bold">Tài khoản</Text>
+            </View>
+            <ChevronRight className="text-primary" size={24} strokeWidth={2} />
           </View>
         </Button>
       </Link>
 
-      <Button
-        variant={"outline"}
-        className="shadow-sm shadow-foreground/5 !bg-background"
-      >
-        <View className="flex-row items-center justify-between w-full">
-          <View className="flex-row items-center gap-4">
-            <MoonStar className="text-primary" size={16} strokeWidth={2} />
-            <Text className="font-bold">Chế độ tối</Text>
-          </View>
-          <ThemeToggle className="mr-0" swtich />
-        </View>
-      </Button>
-      <ButtonWithIcon />
+      <LogoutButton />
     </View>
   );
 };

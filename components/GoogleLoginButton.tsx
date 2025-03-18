@@ -3,14 +3,14 @@ import { loginWithGoogle } from "~/api/auth";
 import GoogleSvg from "~/assets/icons/icons8-google.svg";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
-import { useGlobalStore } from "~/lib/global-store";
+import { useStore } from "~/stores/index";
 import { catchErrorTyped } from "~/lib/utils";
 
 const GoogleLoginButton = (props: { children?: string }) => {
   const router = useRouter();
 
   const handleGoogleLogin = async () => {
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     const [error, response] = await catchErrorTyped(loginWithGoogle(), []);
 
@@ -18,7 +18,7 @@ const GoogleLoginButton = (props: { children?: string }) => {
       router.replace("/(tabs)/profile");
     }
 
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
   };
 
   return (

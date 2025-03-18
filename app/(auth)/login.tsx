@@ -12,7 +12,7 @@ import { Button } from "~/components/ui/button";
 import { Form, FormField, FormInput } from "~/components/ui/form";
 import { Text } from "~/components/ui/text";
 import { AppErrors } from "~/lib/errors";
-import { useGlobalStore } from "~/lib/global-store";
+import { useStore } from "~/stores/index";
 import { catchErrorTyped } from "~/lib/utils";
 import { loginSchema, LoginSchema } from "~/schemas/auth.schema";
 
@@ -55,7 +55,7 @@ const FormContainer = () => {
   });
 
   const onSubmit = async (values: LoginSchema) => {
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     const [error, data] = await catchErrorTyped(loginWithCreds(values), [
       AuthErrors,
@@ -72,7 +72,7 @@ const FormContainer = () => {
       router.replace("/(tabs)/profile");
     }
 
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
   };
 
   return (

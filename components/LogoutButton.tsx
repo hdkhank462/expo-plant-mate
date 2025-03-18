@@ -5,23 +5,26 @@ import { usePopup } from "~/components/PopupProvider";
 import { Button, ButtonProps } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
 import { AppErrors } from "~/lib/errors";
-import { useGlobalStore } from "~/lib/global-store";
+import { useStore } from "~/stores/index";
 import { LogOut } from "~/lib/icons/LogOut";
 import { catchErrorTyped, cn } from "~/lib/utils";
+import { cancelAllNotifications } from "~/services/notification.service";
 
 const LogoutButton = ({ children, className }: ButtonProps) => {
   const popup = usePopup();
 
   const handleLogout = async () => {
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     const [error] = await catchErrorTyped(logout(), [AppErrors]);
 
     if (error && error.code === AppErrors.UnknownError.code) {
       popup.error();
+    } else {
+      await cancelAllNotifications();
     }
 
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
   };
 
   return (

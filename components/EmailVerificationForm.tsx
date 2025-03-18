@@ -15,7 +15,7 @@ import { Button, ButtonProps } from "~/components/ui/button";
 import { Form, FormField, FormInput } from "~/components/ui/form";
 import { Text } from "~/components/ui/text";
 import { getErrorsString } from "~/lib/errors";
-import { useGlobalStore } from "~/lib/global-store";
+import { useStore } from "~/stores/index";
 import { catchErrorTyped, cn } from "~/lib/utils";
 import {
   checkPasswordTokenSchema,
@@ -107,7 +107,7 @@ const EmailVerificationForm = ({
     console.log("Submit values:", values);
     const schema = emailOnlySchema.parse(values);
 
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     if (isPasswordReset) {
       await handleResetPassword(schema);
@@ -115,14 +115,14 @@ const EmailVerificationForm = ({
       await handleResendEmail(schema);
     }
 
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
   };
 
   const onCheckTokenSubmit = async (values: CheckPasswordTokenSchema) => {
     console.log("Submit values:", values);
     const schema = checkPasswordTokenSchema.parse(values);
 
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     const [error, response] = await catchErrorTyped(
       checkPasswordResetToken(schema),
@@ -143,7 +143,7 @@ const EmailVerificationForm = ({
       router.push(`/(auth)/password-reset-confirm/${schema.token}` as any);
     }
 
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
   };
 
   const handleTimerFinish = () => {

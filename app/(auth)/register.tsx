@@ -12,7 +12,7 @@ import { Button } from "~/components/ui/button";
 import { Form, FormField, FormInput } from "~/components/ui/form";
 import { Text } from "~/components/ui/text";
 import { AppErrors } from "~/lib/errors";
-import { useGlobalStore } from "~/lib/global-store";
+import { useStore } from "~/stores/index";
 import { catchErrorTyped } from "~/lib/utils";
 import { registerSchema, RegisterSchema } from "~/schemas/auth.schema";
 
@@ -56,7 +56,7 @@ const FormContainer = () => {
     console.log("Submit values:", values);
     const schema = registerSchema.parse(values);
 
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     const [error] = await catchErrorTyped(register(schema), [
       AuthErrors<RegisterSchema>,
@@ -87,7 +87,7 @@ const FormContainer = () => {
       });
     }
 
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
   };
 
   return (

@@ -1,13 +1,13 @@
 import { useColorScheme as useNativewindColorScheme } from "nativewind";
 import { useEffect } from "react";
 import { DEFAULT, STORAGE_KEYS } from "~/lib/constants";
-import { useGlobalStore } from "~/lib/global-store";
+import { useStore } from "~/stores/index";
 import storage from "~/lib/storage";
 
 export function useColorScheme() {
   const { colorScheme, setColorScheme, toggleColorScheme } =
     useNativewindColorScheme();
-  const isInitialized = useGlobalStore((state) => state.isInitialized);
+  const isInitialized = useStore((state) => state.isInitialized);
 
   // Load the color scheme from AsyncStorage when the component mounts
   useEffect(() => {

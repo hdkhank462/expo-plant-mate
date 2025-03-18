@@ -5,9 +5,9 @@ import axios, {
   isAxiosError,
 } from "axios";
 import Toast from "react-native-toast-message";
-import { DEFAULT, STORAGE_KEYS } from "~/lib/constants";
+import { DEFAULT, STORAGE_KEYS } from "~/constants/values";
 import { AppErrors } from "~/lib/errors";
-import { useGlobalStore } from "~/lib/global-store";
+import { useStore } from "~/stores/index";
 import storage from "~/lib/storage";
 
 const refreshToken = async () => {
@@ -24,7 +24,7 @@ const refreshToken = async () => {
       refresh: "",
     };
 
-    useGlobalStore.setState({ authToken });
+    useStore.setState({ authToken });
     await storage.set(STORAGE_KEYS.AUTH_TOKEN, authToken);
     return new AppErrors(AppErrors.Unauthorized);
   } catch (error) {
@@ -34,7 +34,7 @@ const refreshToken = async () => {
       text2: AppErrors.SessionExpired.message,
     });
 
-    useGlobalStore.setState({
+    useStore.setState({
       isAuthenticated: false,
       authToken: null,
       userInfo: null,

@@ -6,11 +6,16 @@ import { SafeAreaView, ScrollView, View } from "react-native";
 import { getPlantCareById, updatePlantCare } from "~/api/plants";
 import PlantCareForm from "~/components/PlantCareForm";
 import { Button } from "~/components/ui/button";
-import { CARE_TYPES } from "~/lib/constants";
-import { useGlobalStore } from "~/lib/global-store";
+import { CARE_TYPES } from "~/constants/values";
+import { useStore } from "~/stores/index";
 import { catchErrorTyped } from "~/lib/utils";
 import { Text } from "~/components/ui/text";
 import { plantCareSchema, PlantCareSchema } from "~/schemas/plant.schema";
+import {
+  cancelNotificationsById,
+  findNotificationsById,
+  scheduleWeeklyNotification,
+} from "~/services/notification.service";
 
 const UpdatePlantCareScreen = () => {
   const router = useRouter();
@@ -35,7 +40,7 @@ const UpdatePlantCareScreen = () => {
     const getPlantCare = async () => {
       if (typeof id !== "string" || id === "[id]") return;
 
-      useGlobalStore.setState({ isAppLoading: true });
+      useStore.setState({ isAppLoading: true });
 
       const [errors, response] = await catchErrorTyped(
         getPlantCareById(id),
@@ -63,7 +68,7 @@ const UpdatePlantCareScreen = () => {
         });
       }
 
-      useGlobalStore.setState({ isAppLoading: false });
+      useStore.setState({ isAppLoading: false });
     };
 
     getPlantCare();
@@ -75,16 +80,24 @@ const UpdatePlantCareScreen = () => {
     console.log("Submit values:", JSON.stringify(values, null, 2));
     const schema = plantCareSchema.parse(values);
 
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     const [errors, response] = await catchErrorTyped(
       updatePlantCare(id, schema),
       []
     );
 
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
 
     if (response) {
+      const notifications = await findNotificationsById(response.id.toString());
+
+      if (notifications.length > 0) {
+        await cancelNotificationsById(response.id.toString());
+      }
+
+      await scheduleWeeklyNotification(response);
+
       router.replace("/(tabs)/plant-care");
     }
   };

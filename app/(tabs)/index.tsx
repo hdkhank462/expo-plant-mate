@@ -8,12 +8,12 @@ import Refresher from "~/components/Refresher";
 import { Button } from "~/components/ui/button";
 import { Text } from "~/components/ui/text";
 import UnauthenticatedView from "~/components/UnauthenticatedView";
-import { useGlobalStore } from "~/lib/global-store";
+import { useStore } from "~/stores/index";
 import { catchErrorTyped } from "~/lib/utils";
 
 const PlantListScreen = () => {
   const scrollRef = React.useRef<ScrollView>(null);
-  const userInfo = useGlobalStore((state) => state.userInfo);
+  const userInfo = useStore((state) => state.userInfo);
   const [refreshing, setRefreshing] = React.useState(false);
   const [userPlants, setUserPlants] = React.useState<UserPlantsDetail[]>();
 
@@ -28,7 +28,7 @@ const PlantListScreen = () => {
   }, []);
 
   const refetch = async () => {
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     if (userInfo) {
       const [errors, response] = await catchErrorTyped(getUserPlants(), []);
@@ -37,11 +37,11 @@ const PlantListScreen = () => {
       }
     }
 
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
   };
 
   const handleOnUnsave = async (userPlantId: number) => {
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     const [errors, isSuccess] = await catchErrorTyped(
       unSavePlant(userPlantId),
@@ -57,7 +57,7 @@ const PlantListScreen = () => {
       });
     }
 
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
   };
 
   if (!userPlants) return null;

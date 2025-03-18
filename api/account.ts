@@ -1,9 +1,9 @@
 import { AxiosError } from "axios";
 import Toast from "react-native-toast-message";
 import api from "~/lib/axios.config";
-import { STORAGE_KEYS } from "~/lib/constants";
+import { STORAGE_KEYS } from "~/constants/values";
 import { AppErrors, BaseSchemaError } from "~/lib/errors";
-import { useGlobalStore } from "~/lib/global-store";
+import { useStore } from "~/stores/index";
 import storage from "~/lib/storage";
 import {
   ChangePasswordSchema,
@@ -91,7 +91,7 @@ const updateAccount = async (schema: UpdateAccountSchema) => {
       },
     });
 
-    useGlobalStore.setState({
+    useStore.setState({
       userInfo: response.data,
     });
 

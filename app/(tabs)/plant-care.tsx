@@ -8,17 +8,23 @@ import { Card, CardContent } from "~/components/ui/card";
 import { Switch } from "~/components/ui/switch";
 import { Text } from "~/components/ui/text";
 import UnauthenticatedView from "~/components/UnauthenticatedView";
-import { CARE_TYPES, WEEKDAYS } from "~/lib/constants";
-import { useGlobalStore } from "~/lib/global-store";
+import { CARE_TYPES, STORAGE_KEYS, WEEKDAYS } from "~/constants/values";
+import { useStore } from "~/stores/index";
 import { Plus } from "~/lib/icons/Plus";
 import { Leaf } from "~/lib/icons/Leaf";
 import { Repeat2 } from "~/lib/icons/Repeat2";
 import { catchErrorTyped } from "~/lib/utils";
+import {
+  cancelNotificationsById,
+  findNotificationsById,
+  scheduleWeeklyNotification,
+} from "~/services/notification.service";
+import storage from "~/lib/storage";
 
 const PlantCareScreen = () => {
   const scrollRef = React.useRef<ScrollView>(null);
   const navigation = useNavigation();
-  const userInfo = useGlobalStore((state) => state.userInfo);
+  const userInfo = useStore((state) => state.userInfo);
   const [refreshing, setRefreshing] = React.useState(false);
   const [plantCares, setPlantCares] = React.useState<UserPlantCare[]>();
 
@@ -47,15 +53,21 @@ const PlantCareScreen = () => {
   const refetch = async () => {
     if (!userInfo) return;
 
-    useGlobalStore.setState({ isAppLoading: true });
+    useStore.setState({ isAppLoading: true });
 
     const [errors, response] = await catchErrorTyped(getPlantCares(), []);
 
     if (response) {
       setPlantCares(response);
+      await storage.set(`${STORAGE_KEYS.ALARMS}-${userInfo.pk}`, response);
+    } else {
+      const alarms = await storage.get<UserPlantCare[]>(
+        `${STORAGE_KEYS.ALARMS}-${userInfo.pk}`
+      );
+      if (alarms) setPlantCares(alarms as UserPlantCare[]);
     }
 
-    useGlobalStore.setState({ isAppLoading: false });
+    useStore.setState({ isAppLoading: false });
   };
 
   if (!plantCares) return null;
@@ -92,9 +104,36 @@ const PlantCareScreen = () => {
   );
 };
 
-const PlantCareCard = ({ plantCare }: { plantCare: UserPlantCareLocal }) => {
+const PlantCareCard = ({ plantCare }: { plantCare: UserPlantCare }) => {
   const router = useRouter();
-  const [isEnabled, setIsEnabled] = React.useState(plantCare.enabled || false);
+  const [isEnable, setIsEnable] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkAlarmStatus = async () => {
+      const notifications = await findNotificationsById(
+        plantCare.id.toString()
+      );
+      console.log(
+        "Thông báo cho",
+        plantCare.id,
+        JSON.stringify(notifications, null, 2)
+      );
+
+      setIsEnable(notifications.length > 0);
+    };
+
+    checkAlarmStatus();
+  }, []);
+
+  const onToggleAlarmSwitch = async () => {
+    setIsEnable((prev) => !prev);
+
+    if (isEnable) await cancelNotificationsById(plantCare.id.toString());
+    else {
+      const identifiers = await scheduleWeeklyNotification(plantCare);
+      console.log("Identifiers", identifiers);
+    }
+  };
 
   const repeat =
     plantCare.repeat.length > 0
@@ -106,14 +145,6 @@ const PlantCareCard = ({ plantCare }: { plantCare: UserPlantCareLocal }) => {
             .map((day) => day.label)
             .join(", ")
       : "Một lần";
-
-  React.useEffect(() => {
-    if (isEnabled) {
-      // TODO: Schedule notification
-    } else {
-      // TODO: Cancel notification
-    }
-  }, [isEnabled]);
 
   return (
     <Card>
@@ -155,12 +186,7 @@ const PlantCareCard = ({ plantCare }: { plantCare: UserPlantCareLocal }) => {
             </View>
           </View>
           <View className="flex-row items-center">
-            <Switch
-              checked={isEnabled}
-              onCheckedChange={() => {
-                setIsEnabled((prev) => !prev);
-              }}
-            />
+            <Switch checked={isEnable} onCheckedChange={onToggleAlarmSwitch} />
           </View>
         </View>
       </CardContent>

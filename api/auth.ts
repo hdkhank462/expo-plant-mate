@@ -5,9 +5,9 @@ import {
 } from "@react-native-google-signin/google-signin";
 import { AxiosError } from "axios";
 import api from "~/lib/axios.config";
-import { STORAGE_KEYS } from "~/lib/constants";
+import { STORAGE_KEYS } from "~/constants/values";
 import { AppErrors, BaseSchemaError, ErrorWithCode } from "~/lib/errors";
-import { useGlobalStore } from "~/lib/global-store";
+import { useStore } from "~/stores/index";
 import storage from "~/lib/storage";
 import { LoginSchema, RegisterSchema } from "~/schemas/auth.schema";
 
@@ -96,7 +96,7 @@ const register = async (schema: RegisterSchema) => {
       refresh: response.data.refresh,
     };
 
-    useGlobalStore.setState({
+    useStore.setState({
       isAuthenticated: true,
       userInfo: response.data.user,
       authToken,
@@ -133,7 +133,7 @@ const loginWithCreds = async (schema: LoginSchema) => {
       refresh: response.data.refresh,
     };
 
-    useGlobalStore.setState({
+    useStore.setState({
       isAuthenticated: true,
       userInfo: response.data.user,
       authToken,
@@ -192,7 +192,7 @@ const loginWithGoogle = async () => {
     refresh: response.data.refresh,
   };
 
-  useGlobalStore.setState({
+  useStore.setState({
     isAuthenticated: true,
     userInfo: response.data.user,
     authToken,
@@ -212,7 +212,7 @@ const getUserInfo = async () => {
     method: "get",
   });
 
-  useGlobalStore.setState({ userInfo: response.data });
+  useStore.setState({ userInfo: response.data });
 
   await storage.set(STORAGE_KEYS.USER_INFO, response.data);
   return response.data;
@@ -230,7 +230,7 @@ const logout = async () => {
     method: "post",
   });
 
-  useGlobalStore.setState({
+  useStore.setState({
     userInfo: null,
     authToken: null,
     isAuthenticated: false,
