@@ -1,6 +1,6 @@
 export const DEFAULT = {
   APP_THEME: "light",
-  BASE_API_URL: "https://djrest-plant-mate.vercel.app/api",
+  BASE_API_URL: "https://doan.hoangduongkhanh.id.vn/api",
   ALARMS_ID_PREFIX: "plant-mate-alarm",
 };
 
