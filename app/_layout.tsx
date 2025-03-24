@@ -134,6 +134,7 @@ export default function RootLayout() {
               headerTitleAlign: "center",
             }}
           />
+          <Stack.Screen name="tflite" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" options={{ headerShown: false }} />
         </Stack>
       </PopupProvider>

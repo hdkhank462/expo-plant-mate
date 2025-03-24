@@ -15,4 +15,6 @@ config.transformer = {
     sourceExts: [...resolver.sourceExts, "svg"]
   };
 
+  config.resolver.assetExts.push("tflite");
+
 module.exports = withNativeWind(config, { input: './global.css' });

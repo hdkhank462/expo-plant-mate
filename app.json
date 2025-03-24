@@ -36,6 +36,7 @@
     },
     "plugins": [
       "expo-router",
+      "react-native-fast-tflite",
       [
         "expo-image-picker",
         {
@@ -50,7 +51,14 @@
           "defaultChannel": "default",
           "enableBackgroundRemoteNotifications": false
         }
+      ],
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "$(PRODUCT_NAME) needs access to your Camera."
+        }
       ]
+      
     ],
     "experiments": {
       "typedRoutes": true
