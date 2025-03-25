@@ -1,3 +1,4 @@
+import { Link } from "expo-router";
 import React from "react";
 import { SafeAreaView, ScrollView, View } from "react-native";
 import { ThemeToggle } from "~/components/ThemeToggle";
@@ -50,6 +51,20 @@ const SettingsContainer = () => {
           <ChevronRight className="text-primary" size={24} strokeWidth={2} />
         </View>
       </Button>
+      <Link href={"/tflite"} asChild>
+        <Button
+          variant={"outline"}
+          className="items-start shadow-sm shadow-foreground/5"
+        >
+          <View className="flex-row items-center justify-between w-full">
+            <View className="flex-row items-center gap-4">
+              {/* <User className="text-primary" size={16} strokeWidth={2} /> */}
+              <Text className="font-bold">TFLite</Text>
+            </View>
+            <ChevronRight className="text-primary" size={24} strokeWidth={2} />
+          </View>
+        </Button>
+      </Link>
     </View>
   );
 };

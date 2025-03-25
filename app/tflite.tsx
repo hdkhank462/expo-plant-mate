@@ -1,6 +1,12 @@
-import { StyleSheet } from "nativewind";
+import { useIsFocused } from "@react-navigation/native";
 import React from "react";
-import { ActivityIndicator, View } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  View,
+} from "react-native";
 import {
   Tensor,
   TensorflowModel,
@@ -26,11 +32,24 @@ function modelToString(model: TensorflowModel): string {
   );
 }
 
-const TfliteDetector = () => {
+const FPS_LIMIT = 30;
+
+const TfliteDetectorScreen = () => {
   const { hasPermission, requestPermission } = useCameraPermission();
+  const isFocused = useIsFocused();
   const device = useCameraDevice("back");
-  const model = useTensorflowModel(require("../assets/weight_32.tflite"));
-  const actualModel = model.state === "loaded" ? model.model : undefined;
+  const model = useTensorflowModel(require("~/assets/weight_32.tflite"));
+  const modelGPU = useTensorflowModel(
+    require("~/assets/weight_32.tflite"),
+    Platform.OS === "ios" ? "core-ml" : "nnapi"
+  );
+
+  const actualModel =
+    modelGPU.state === "loaded"
+      ? modelGPU.model
+      : model.state === "loaded"
+      ? model.model
+      : null;
 
   React.useEffect(() => {
     if (actualModel == null) return;
@@ -42,25 +61,31 @@ const TfliteDetector = () => {
   const frameProcessor = useFrameProcessor(
     (frame) => {
       "worklet";
-      if (actualModel == null) {
+      if (actualModel == null || !isFocused) {
         // model is still loading...
         return;
       }
 
-      console.log(`Running inference on ${frame}`);
-      const resized = resize(frame, {
-        scale: {
-          width: 320,
-          height: 320,
-        },
-        pixelFormat: "rgb",
-        dataType: "uint8",
-      });
-      const result = actualModel.runSync([resized]);
-      const num_detections = result[3]?.[0] ?? 0;
-      console.log("Result: " + num_detections);
+      console.log("Processing frame...");
+
+      try {
+        const resized = resize(frame, {
+          scale: {
+            width: 320,
+            height: 320,
+          },
+          pixelFormat: "rgb",
+          dataType: "uint8",
+        });
+
+        const result = actualModel.runSync([resized]);
+        const num_detections = result[3]?.[0] ?? 0;
+        console.log("Nums: " + num_detections);
+      } catch (error) {
+        console.error("Frame processing error:", error);
+      }
     },
-    [actualModel]
+    [actualModel, isFocused]
   );
 
   React.useEffect(() => {
@@ -70,28 +95,32 @@ const TfliteDetector = () => {
   console.log(`Model: ${model.state} (${model.model != null})`);
 
   return (
-    <View>
-      {hasPermission && device != null ? (
-        <Camera
-          device={device}
-          style={StyleSheet.absoluteFill}
-          isActive={true}
-          frameProcessor={frameProcessor}
-          pixelFormat="yuv"
-        />
-      ) : (
-        <Text>No Camera available.</Text>
-      )}
+    <SafeAreaView className="h-full">
+      <View className="h-full pt-7">
+        {hasPermission && device != null ? (
+          <Camera
+            device={device}
+            style={StyleSheet.absoluteFill}
+            isActive={isFocused}
+            frameProcessor={frameProcessor}
+            pixelFormat="yuv"
+            enableBufferCompression={true}
+            lowLightBoost={false}
+          />
+        ) : (
+          <Text>No Camera available.</Text>
+        )}
 
-      {model.state === "loading" && (
-        <ActivityIndicator size="small" color="white" />
-      )}
+        {model.state === "loading" && (
+          <ActivityIndicator size="small" color="white" />
+        )}
 
-      {model.state === "error" && (
-        <Text>Failed to load model! {model.error.message}</Text>
-      )}
-    </View>
+        {model.state === "error" && (
+          <Text>Failed to load model! {model.error.message}</Text>
+        )}
+      </View>
+    </SafeAreaView>
   );
 };
 
-export default TfliteDetector;
+export default TfliteDetectorScreen;
