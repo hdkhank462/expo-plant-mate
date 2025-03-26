@@ -39,6 +39,7 @@ type PopupConfigs = {
 
 interface PopupConfirmConfigs extends PopupConfigs {
   confirmButtonText?: string;
+  cancellButtonText?: string;
   onConfirm?: () => void;
   onCancell?: () => void;
 }
@@ -126,11 +127,21 @@ const ConfirmPopupContent = ({ configs }: { configs: PopupConfirmConfigs }) => {
       </DialogHeader>
       <DialogFooter>
         <View className="flex-row items-center justify-end gap-2">
-          <DialogClose asChild>
-            <Button variant={"outline"} size={"sm"}>
-              <Text>Huỷ</Text>
-            </Button>
-          </DialogClose>
+          {configs.onCancell && (
+            <DialogClose asChild>
+              <Button
+                variant={"outline"}
+                size={"sm"}
+                onPress={configs.onCancell}
+              >
+                <Text>
+                  {configs.cancellButtonText
+                    ? configs.cancellButtonText
+                    : "Huỷ"}
+                </Text>
+              </Button>
+            </DialogClose>
+          )}
           <DialogClose asChild>
             <Button size={"sm"} onPress={configs.onConfirm}>
               <Text>

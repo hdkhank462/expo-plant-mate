@@ -2,6 +2,7 @@ import React from "react";
 import { Button, ButtonProps } from "~/components/ui/button";
 import { Camera } from "~/lib/icons/Camera";
 import * as ImagePicker from "expo-image-picker";
+import { usePopup } from "~/components/PopupProvider";
 
 const PickImageButton = ({
   handleOnPress,
@@ -9,12 +10,13 @@ const PickImageButton = ({
 }: ButtonProps & {
   handleOnPress?: (image: ImagePicker.ImagePickerAsset) => void;
 }) => {
+  const popup = usePopup();
+
   const pickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         allowsEditing: true,
-        // aspect: [4, 3],
         quality: 1,
       });
       if (!result.canceled) {
@@ -25,10 +27,37 @@ const PickImageButton = ({
     }
   };
 
+  const takePicture = async () => {
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        quality: 1,
+        cameraType: ImagePicker.CameraType.back,
+      });
+      if (!result.canceled) {
+        return result.assets[0];
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const onPress = async () => {
-    const imagePicked = await pickImage();
-    console.log("Picked image:", JSON.stringify(imagePicked, null, 2));
-    if (handleOnPress && imagePicked) handleOnPress(imagePicked);
+    popup.confirm({
+      title: "Chọn ảnh",
+      description: "Chọn ảnh từ thư viện hoặc chụp ảnh mới",
+      confirmButtonText: "Chụp ảnh",
+      onConfirm: async () => {
+        const imagePicked = await takePicture();
+        if (handleOnPress && imagePicked) handleOnPress(imagePicked);
+      },
+      cancellButtonText: "Chọn ảnh",
+      onCancell: async () => {
+        const imagePicked = await pickImage();
+        if (handleOnPress && imagePicked) handleOnPress(imagePicked);
+      },
+    });
   };
 
   return (
