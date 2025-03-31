@@ -36,6 +36,22 @@ Phần cứng thiết bị di dộng hoặc máy ảo:
 - CPU: Tuỳ chọn
 - GPU: Tuỳ chọn
 
+**Chuẩn bị**
+
+Tại file `constants\values.ts` thay đổi địa chỉ api tương ứng:
+
+```typescript
+export const DEFAULT = {
+  APP_THEME: "light",
+  BASE_API_URL: "http://192.168.1.1/api",
+  ALARMS_ID_PREFIX: "plant-mate-alarm",
+};
+```
+
+Nên sử dụng thiết bị di động vật lý và laptop để debug chương trình nhằm múc địch kết nối cùng một wifi
+
+Lưu ý rằng một số tính năng chỉ có thể được sử dụng trên thiết bị di động vật lý
+
 **Cài đặt**
 
 Tại thự mục chứa file `package.json`
